@@ -1,0 +1,13 @@
+{
+    "bg": {
+        "normalBg": "audios/bg/normalBg"
+    },
+    "ui": {
+        "alive": "audios/ui/alive",
+        "alive2": "audios/ui/alive2",
+        "btn_normalClick": "audios/ui/btn_normalClick",
+        "error": "audios/ui/error",
+        "stamp": "audios/ui/stamp",
+        "gamePass": "audios/ui/gamePass"
+    }
+}
