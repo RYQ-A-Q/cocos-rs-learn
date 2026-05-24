@@ -18,7 +18,19 @@ export class PopDYPlatform extends Component {
     private rank() {
 
     }
-    private share(){
+    /**侧边栏 */
+    private gotoLeftPanel() {
+        adMgr.ad.navigateToScene((res: boolean) => {
+            if (res) {
+                if (adMgr.ad?.onshowOp?.scene == "021036") {
+                   uiMgr.showToast("侧边栏！")
+                }
+            }
+        })
+
+    }
+
+    private share() {
         adMgr.showShare()
     }
     /**
