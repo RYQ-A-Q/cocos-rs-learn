@@ -71,7 +71,6 @@ export class UIMgr {
 
         // 加载 Prefab
         const loadPrefab = (bundle: any) => {
-            console.log(bundle)
             bundle.load(path, Prefab, (err, prefab_res: Prefab) => {
                 if (err || !prefab_res) {
                     warn(`[UIMgr] 加载 UI 失败：${name + path}`, err);
