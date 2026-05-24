@@ -2,6 +2,8 @@ import { IAdConfig, IAdPlatform } from "../lib";
 import { sys } from "cc";
 import { NOW_IN_TEST } from "../Constant";
 import { eventMgr } from "../../Managers/EventMgr";
+import { netMgr } from "../../Managers/NetMgr";
+import { storageMgr } from "../../Managers/StorageMgr";
 
 export class DyPlatformImpl implements IAdPlatform {
     private tt = window["tt"];
@@ -47,7 +49,59 @@ export class DyPlatformImpl implements IAdPlatform {
             };
         });
     }
+    /**
+     * 抖音登录
+     * @param callback 回调函数，参数为 (success: boolean, userInfo?: any, error?: string)
+     */
+    login(callback?: (success: boolean, userInfo?: any, error?: string) => void) {
+        if (!this.tt) {
+            console.warn("非抖音平台，无法登录");
+            callback && callback(false, null, "非抖音平台");
+            return;
+        }
 
+        this.tt.login({
+            force: true, // 未登录时，是否强制调起登录框
+            success: (res: any) => {
+                console.log(`login 调用成功，code: ${res.code}, anonymousCode: ${res.anonymousCode}`);
+
+                // 调用抖音官方API换取session信息
+                this.tt.request({
+                    url: "https://minigame.zijieapi.com/mgplatform/api/apps/jscode2session",
+                    method: "GET",
+                    header: {
+                        "content-type": "application/json"
+                    },
+                    data: {
+                        appid: "xxxx",//TODO 替换实际的
+                        code: res.code,
+                        secret: "xxxx",//TODO 替换实际的
+                        anonymous_code: res.anonymousCode || ""
+                    },
+                    success: (apiRes: any) => {
+                        if (apiRes?.data?.error === 0) {
+                            console.log("抖音登录成功，获取用户信息:", apiRes.data);
+                            // 可以在这里保存用户信息到本地存储
+                            storageMgr.set('dy_user_info', apiRes.data);
+
+                            callback && callback(true, apiRes.data);
+                        } else {
+                            console.error("抖音登录失败:", apiRes.data);
+                            callback && callback(false, null, apiRes.data?.err_tips || "登录失败");
+                        }
+                    },
+                    fail: (err: any) => {
+                        console.error("抖音登录请求失败:", err);
+                        callback && callback(false, null, err.errMsg || "网络请求失败");
+                    }
+                });
+            },
+            fail: (res: any) => {
+                console.error(`login 调用失败:`, res);
+                callback && callback(false, null, res.errMsg || "登录失败");
+            }
+        });
+    }
     private onShow(res: any): void {
         if (this.shareTime <= 0) return;
 
@@ -97,6 +151,34 @@ export class DyPlatformImpl implements IAdPlatform {
             fail: () => {
                 cb(false);
             }
+        });
+    }
+    /**添加桌面 
+     * @param cb true成功
+    */
+    addShortcut(cb: (ok: boolean) => void) {
+        this.tt.addShortcut({
+            success() {
+                console.log("添加成功")
+                cb(true)
+            },
+            fail(err) {
+                console.log("添加失败")
+                cb(false)
+            },
+        });
+    }
+    /**添加桌面 */
+    checkShortcut(cb: (ok: boolean) => void) {
+        this.tt.checkShortcut({
+            success(res) {
+                cb(true)
+                console.log("检查快捷方式", res.status);
+            },
+            fail(res) {
+                cb(false)
+                console.log("检查快捷方式失败", res.errMsg);
+            },
         });
     }
     /** 监听键盘完成 */
@@ -326,7 +408,7 @@ export class DyPlatformImpl implements IAdPlatform {
         }
 
         this.tt.shareAppMessage({
-            templateId:"",
+            templateId: "",//NOTICE 抖音的模板id可以在这里修改，存在多个模板时可以修改/增加其它方法
             // title: ShareConfig.title,
             // imageUrl: ShareConfig.imageUrl,
             // imageUrlId: ShareConfig.imageUrlId,

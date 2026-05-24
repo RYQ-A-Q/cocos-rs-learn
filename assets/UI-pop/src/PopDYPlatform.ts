@@ -12,8 +12,27 @@ export class PopDYPlatform extends Component {
     update(deltaTime: number) {
 
     }
+    /**
+     * 抖音登录
+     */
     private login() {
+        if (adMgr.ad && adMgr.ad.login) {
+            uiMgr.showToast("正在登录...");
+            adMgr.ad.login((success: boolean, userInfo?: any, error?: string) => {
+                if (success) {
+                    uiMgr.showToast("登录成功！");
+                    console.log("用户信息:", userInfo);
 
+                    // 这里可以处理登录成功后的逻辑
+                    // 例如：保存用户信息、更新UI等
+                } else {
+                    uiMgr.showToast(`登录失败: ${error}`);
+                    console.error("登录失败:", error);
+                }
+            });
+        } else {
+            uiMgr.showToast("当前平台不支持登录");
+        }
     }
     private rank() {
 
@@ -21,10 +40,21 @@ export class PopDYPlatform extends Component {
     /**侧边栏 */
     private gotoLeftPanel() {
         adMgr.ad.navigateToScene((res: boolean) => {
+            console.log(adMgr.ad?.onshowOp)
+            console.log(res)
+            // if (res) {
+            if (adMgr.ad?.onshowOp?.scene == "021036") {//这里最好单独存储变量来二次检查入口场景，在开发模拟器中可能响应不正确
+                uiMgr.showToast("侧边栏！")
+            }
+            // }
+        })
+
+    }
+    /**添加快捷 */
+    private addShortcut() {
+        adMgr.ad.addShortcut((res: boolean) => {
             if (res) {
-                if (adMgr.ad?.onshowOp?.scene == "021036") {
-                   uiMgr.showToast("侧边栏！")
-                }
+                console.log("添加 " + res)
             }
         })
 

@@ -110,9 +110,10 @@ export interface IAdConfig {
     customId1?: string[]
 }
 /**
- * 广告平台接口
+ * 平台接口
  */
 export interface IAdPlatform {
+    login(callback: Function): void
     // Banner广告
     showBanner(style?: number): void;
     hideBanner(): void;

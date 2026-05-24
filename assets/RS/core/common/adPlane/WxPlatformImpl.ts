@@ -2,7 +2,7 @@ import { IAdConfig, IAdPlatform } from "../lib";
 import { sys } from "cc";
 
 export class WxPlatformImpl implements IAdPlatform {
-    private wx=window['wx']
+    private wx = window['wx']
     private bannerAd: any = null;
     private rewardedVideoAd: any = null;
     private interstitialAd: any = null;
@@ -12,7 +12,7 @@ export class WxPlatformImpl implements IAdPlatform {
     private shareTime: number = 0;
     private shareSuccCallBack: Function = null;
     private shareFailCallBack: Function = null;
-    
+
     private selfConfig: IAdConfig;
     private windowWidth: number = 0;
     private windowHeight: number = 0;
@@ -55,7 +55,9 @@ export class WxPlatformImpl implements IAdPlatform {
         // 初始化原生模板广告
         this.initCustomAd1();
     }
-
+    login(callback?: Function) {
+        console.warn("未实现")
+    }
     private preloadRewardedVideo(): void {
         const id = this.selfConfig.videoId?.[0];
         if (!id) return;
@@ -135,13 +137,13 @@ export class WxPlatformImpl implements IAdPlatform {
         });
 
         this.bannerAd.onError((e: any) => {
-          console.error('WxPlatform', 'Banner报错', e.errCode, e.errMsg);
+            console.error('WxPlatform', 'Banner报错', e.errCode, e.errMsg);
         });
 
         this.bannerAd.show().then(() => {
-           console.log('WxPlatform', 'Banner展示成功');
+            console.log('WxPlatform', 'Banner展示成功');
         }).catch((err: any) => {
-          console.error('WxPlatform', 'Banner展示失败', err);
+            console.error('WxPlatform', 'Banner展示失败', err);
         });
     }
 
@@ -170,7 +172,7 @@ export class WxPlatformImpl implements IAdPlatform {
 
         // 错误处理
         rewardedVideoAd.onError((res: any) => {
-          console.error('WxPlatform', '激励视频播放失败:', res.errMsg);
+            console.error('WxPlatform', '激励视频播放失败:', res.errMsg);
             this.showToast("视频拉取失败");
             callback && callback(2);
         });
@@ -184,7 +186,7 @@ export class WxPlatformImpl implements IAdPlatform {
         // 关闭回调
         rewardedVideoAd.onClose((res: any) => {
             if (!rewardedVideoAd) return;
-            
+
             if (res && res.isEnded || res === undefined) {
                 // 正常播放结束，下发奖励
                 console.log('微信激励视频播放完成');
@@ -211,16 +213,16 @@ export class WxPlatformImpl implements IAdPlatform {
 
         interstitialAd.load().then(() => {
             console.log('WxPlatform', '插屏广告加载成功');
-            
+
             setTimeout(() => {
                 interstitialAd.show().then(() => {
                     console.log('WxPlatform', '插屏展示成功');
                 }).catch((err: any) => {
-                  console.error('WxPlatform', '插屏展示失败', err);
+                    console.error('WxPlatform', '插屏展示失败', err);
                 });
             }, delay * 1000);
         }).catch((err: any) => {
-          console.error('WxPlatform', '插屏加载失败', err);
+            console.error('WxPlatform', '插屏加载失败', err);
         });
 
         interstitialAd.onClose((res: any) => {
@@ -338,10 +340,10 @@ export class WxPlatformImpl implements IAdPlatform {
 
     private onShow(res: any): void {
         if (this.shareTime <= 0) return;
-        
+
         const duration: number = Date.now() - this.shareTime;
         this.shareTime = 0;
-        
+
         if (duration >= 3000) { // ShareSuccessDuration
             console.log(`微信分享 --> 分享成功`);
             this.showToast("分享成功");
@@ -351,13 +353,13 @@ export class WxPlatformImpl implements IAdPlatform {
             this.showToast("分享失败");
             this.shareFailCallBack && this.shareFailCallBack();
         }
-        
+
     }
 
     // ============ 工具方法 ============
     private showToast(tip: string, icon: string = "none", duration: number = 1500): void {
         if (!this.wx) return;
-        
+
         this.wx.showToast({
             "title": tip,
             "icon": icon,
