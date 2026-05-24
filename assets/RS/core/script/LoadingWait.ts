@@ -1,10 +1,7 @@
 import { Vec3 } from 'cc';
-import { Tween } from 'cc';
 import { tween } from 'cc';
 import { _decorator, Component, Node } from 'cc';
 import { eventMgr } from '../Managers/EventMgr';
-import { poolsMgr } from '../Managers/PoolsMgr';
-import { uiMgr } from '../Managers/UIMgr';
 const { ccclass, property } = _decorator;
 
 @ccclass('LoadingWait')
@@ -59,10 +56,12 @@ export class LoadingWait extends Component {
         };
         playJump(0);
     }
-    private closeEvent() {
+    private async closeEvent() {
         eventMgr.category("loadingWait").emit("curLoadingWaitHadclose")
         eventMgr.category("loadingWait").off("closeCurLoadingWait", this.closeEvent, this)
         this.unscheduleAllCallbacks()
+        const { poolsMgr } = await import("../Managers/PoolsMgr")
+        const { uiMgr } = await import("../Managers/UIMgr")
         if (poolsMgr.has(this.node.name)) {
             poolsMgr.put(this.node.name, this.node)
         } else if (uiMgr.has(this.node.name)) {

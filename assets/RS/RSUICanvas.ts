@@ -6,6 +6,7 @@ import { uiMgr } from './core/Managers/UIMgr';
 import { storageMgr } from './core/Managers/StorageMgr';
 import { AESStorageSecurity } from './core/common/AESStorageSecurity';
 import { bundleMgr } from './core/Managers/BundleMgr';
+import { adMgr } from './core/Managers/AdMgr';
 const { ccclass, property } = _decorator;
 
 @ccclass('RSUICanvas')
@@ -14,10 +15,11 @@ export class RSUICanvas extends Component {
     private normalPopPar: Node
     @property({ type: Node, displayName: "taost窗口挂载节点" })
     private taostPopPar: Node
-    protected onLoad(): void {
+    protected onLoad(): void {//NOTICE 进行一些配置设置
         director.addPersistRootNode(this.node)
         storageMgr.init("rs", new AESStorageSecurity("AESSTORAGE20260520rs", "AESStorageSecurity123123123rs"));
         bundleMgr.getBundle(Default_Resources)
+        adMgr.init()
         uiMgr.init({
             [UIPanelType.normal]: this.normalPopPar,
             [UIPanelType.toast]: this.taostPopPar

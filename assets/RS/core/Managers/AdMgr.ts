@@ -4,7 +4,7 @@ import { DyPlatformImpl } from "../common/adPlane/DyPlatformImpl";
 import { WxPlatformImpl } from "../common/adPlane/WxPlatformImpl";
 import { PREVIEW } from "cc/env";
 
-const adConfigs: IAdConfig[] = [
+const adConfigs: IAdConfig[] = [//TODO 这里需要和都要/微信的appid想对应的各种广告id才能正常调用
     { platform: 'dy', id: 1, bannerId: ['7ea4485afjkj3agj1g'], intersitialId: ['81agj8jddll0hd9ike'], videoId: ['1je6cc56h96j52mipr'] },
     { platform: 'wx', id: 2, bannerId: [''], intersitialId: [''], videoId: [''] },
 ]

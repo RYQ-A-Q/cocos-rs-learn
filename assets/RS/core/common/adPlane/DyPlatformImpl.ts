@@ -326,7 +326,7 @@ export class DyPlatformImpl implements IAdPlatform {
         }
 
         this.tt.shareAppMessage({
-            // templateId:ShareConfig.templateId,
+            templateId:"",
             // title: ShareConfig.title,
             // imageUrl: ShareConfig.imageUrl,
             // imageUrlId: ShareConfig.imageUrlId,
