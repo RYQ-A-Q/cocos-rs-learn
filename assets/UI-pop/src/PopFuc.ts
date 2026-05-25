@@ -7,15 +7,12 @@ const { ccclass, property } = _decorator;
 @ccclass('PopFuc')
 export class PopFuc extends Component {
     start() {
-
     }
 
     update(deltaTime: number) {
 
     }
-    private screenShot(callback: (img: ImageAsset) => void) {
-      
-    }
+    
 
 }
 

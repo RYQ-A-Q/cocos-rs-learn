@@ -9,6 +9,7 @@ import { poolsMgr } from './PoolsMgr';
 import { eventMgr } from './EventMgr';
 import { bundleMgr } from './BundleMgr';
 import { LoadingWait } from '../script/LoadingWait';
+import { TextMessage } from '../script/TextMessage';
 type UIMap = { [key: string]: { node: Node, prefab: Prefab }[] };
 export class UIMgr {
     private static _instance: UIMgr = new UIMgr();
@@ -45,7 +46,7 @@ export class UIMgr {
         const cacheKey = name;
         // 检查对象池
         if (poolsMgr.has(cacheKey)) {
-            let node =poolsMgr.get(cacheKey);
+            let node = poolsMgr.get(cacheKey);
             node.active = true;
             this._panelRoots[type].addChild(node);
             this._panelRoots[type].active = true;
@@ -87,7 +88,7 @@ export class UIMgr {
             });
         };
         if (name != "loading_wait" && type != UIPanelType.toast) {
-           eventMgr.category("loadingWait").once("beginWait", async () => {
+            eventMgr.category("loadingWait").once("beginWait", async () => {
                 if (bundleName != null) {
                     bundleMgr.getBundle(bundleName).then(bundle => {
                         loadPrefab(bundle);
@@ -103,7 +104,7 @@ export class UIMgr {
                     loadPrefab(bundle);
                 });
             } else {
-                loadPrefab( await bundleMgr.getBundle(Default_Resources));
+                loadPrefab(await bundleMgr.getBundle(Default_Resources));
             }
         }
 
@@ -132,7 +133,7 @@ export class UIMgr {
                 if (!poolsMgr.has(key)) {
                     node.destroy();
                 } else {
-                   poolsMgr.put(key, node);
+                    poolsMgr.put(key, node);
                 }
                 storeNodes.splice(index, 1);
             }
@@ -150,7 +151,7 @@ export class UIMgr {
                     node.destroy();
                     prefab?.decRef();
                 } else {
-                   poolsMgr.put(key, node);
+                    poolsMgr.put(key, node);
                 }
             }
             delete this._uiCache[key];
@@ -226,8 +227,20 @@ export class UIMgr {
             }
         })
     }
-   
-   
+    /**普通长信息
+     * @param name 标题
+     * @param content 内容
+     * @param textImgList 图片列表
+     */
+    public showText(name: string, content: string, textImgList?: ITextImgItem[]) {
+        this.open("textMessage", "prefab/ui/base/textMessage", UIPanelType.toast, (node) => {
+            if (node) {
+                node.getComponent(TextMessage).display(name, content, textImgList)
+            }
+        })
+    }
+
+
     /**等待弹窗
      * @param longWaitTime 长时间等待时间自主按钮关闭，默认10秒
      */
@@ -260,13 +273,13 @@ export class UIMgr {
      */
     public showVerifyAsync(title: string, msg: string): Promise<boolean> {
         return new Promise((resolve) => {
-           this.showVerifyPanel(title, msg, (isConfirmed: boolean) => {
+            this.showVerifyPanel(title, msg, (isConfirmed: boolean) => {
                 resolve(isConfirmed);
             });
         });
     }
 
-   
+
     /**普通消息通知面板
      * @param content 内容
      * @param title 标题,默认“提示”
@@ -276,7 +289,7 @@ export class UIMgr {
     public showNorMalMessagePanel(content: string, title: string = "提示", callback: (isConfirmed: boolean) => void = () => { }) {
         this.open("noticeMessagePanel", "prefab/ui/base/noticeMessagePanel", UIPanelType.normal, (node) => {
             if (node) {
-                    node.getComponent(NoticeMessagePanel).init(title, content, callback)
+                node.getComponent(NoticeMessagePanel).init(title, content, callback)
             }
         })
     }
