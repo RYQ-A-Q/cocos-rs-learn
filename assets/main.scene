@@ -1127,7 +1127,7 @@
     "component": "",
     "_componentId": "7852ccnncdNeLhlciQZQ68z",
     "handler": "openPopWindows",
-    "customEventData": "popDYPlatform"
+    "customEventData": "popNativePlatform"
   },
   {
     "__type__": "7852ccnncdNeLhlciQZQ68z",

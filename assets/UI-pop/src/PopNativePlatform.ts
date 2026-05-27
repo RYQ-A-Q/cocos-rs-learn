@@ -10,6 +10,9 @@ export class PopNativePlatform extends Component {
     update(deltaTime: number) {
         
     }
+    private jsbTest(){
+
+    }
 }
 
 

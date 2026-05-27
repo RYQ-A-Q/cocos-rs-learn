@@ -572,7 +572,7 @@
       "b": 255,
       "a": 255
     },
-    "_string": "登录",
+    "_string": "jsb测试",
     "_horizontalAlign": 1,
     "_verticalAlign": 1,
     "_actualFontSize": 24,
@@ -771,7 +771,7 @@
     },
     "component": "",
     "_componentId": "3098bin2+FFRZRP/twnxQ5X",
-    "handler": "login",
+    "handler": "jsbTest",
     "customEventData": ""
   },
   {

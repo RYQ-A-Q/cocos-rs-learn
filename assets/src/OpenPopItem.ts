@@ -16,6 +16,9 @@ export class OpenPopItem extends Component {
             case "popFuc":
                 uiMgr.open('popFuc', 'popFuc', UIPanelType.normal, (node) => { }, 'UI-pop')
                 break;
+            case "popNativePlatform":
+                uiMgr.open('popNativePlatform', 'popNativePlatform', UIPanelType.normal, (node) => { }, 'UI-pop')
+                break;
             default:
                 uiMgr.showToast("功能异常")
         }
