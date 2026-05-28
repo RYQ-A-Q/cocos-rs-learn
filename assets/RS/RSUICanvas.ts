@@ -7,6 +7,8 @@ import { storageMgr } from './core/Managers/StorageMgr';
 import { AESStorageSecurity } from './core/common/AESStorageSecurity';
 import { bundleMgr } from './core/Managers/BundleMgr';
 import { adMgr } from './core/Managers/AdMgr';
+import { poolsMgr } from './core/Managers/PoolsMgr';
+import { Prefab } from 'cc';
 const { ccclass, property } = _decorator;
 
 @ccclass('RSUICanvas')
@@ -15,7 +17,13 @@ export class RSUICanvas extends Component {
     private normalPopPar: Node
     @property({ type: Node, displayName: "taost窗口挂载节点" })
     private taostPopPar: Node
+    @property({type:Prefab})
+    private toasrTem: Prefab;
     protected onLoad(): void {//NOTICE 进行一些配置设置
+        (window as any).nativeCallback = (msg: string) => {
+            console.log('【Native 回调】', msg);
+        };
+
         director.addPersistRootNode(this.node)
         storageMgr.init("rs", new AESStorageSecurity("AESSTORAGE20260520rs", "AESStorageSecurity123123123rs"));
         bundleMgr.getBundle(Default_Resources)
@@ -24,7 +32,9 @@ export class RSUICanvas extends Component {
             [UIPanelType.normal]: this.normalPopPar,
             [UIPanelType.toast]: this.taostPopPar
         })
-        this.register(true)
+        poolsMgr.preload("normalToast",this.toasrTem)
+        this.register(true);
+
     }
     start() {
 

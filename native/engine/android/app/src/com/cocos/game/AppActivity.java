@@ -24,6 +24,8 @@ THE SOFTWARE.
 ****************************************************************************/
 package com.cocos.game;
 
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -38,7 +40,17 @@ public class AppActivity extends CocosActivity {
         super.onCreate(savedInstanceState);
         // DO OTHER INITIALIZATION BELOW
         SDKWrapper.shared().init(this);
-
+        TestBridge.init((this));
+        // Android 13+ 动态申请通知权限
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(
+                        new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
+                        1001
+                );
+            }
+        }
     }
 
     @Override

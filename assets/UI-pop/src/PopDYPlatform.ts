@@ -1,12 +1,15 @@
 import { _decorator, Component, Node } from 'cc';
 import { adMgr } from '../../RS/core/Managers/AdMgr';
 import { uiMgr } from '../../RS/core/Managers/UIMgr';
+import { sys } from 'cc';
 const { ccclass, property } = _decorator;
 
 @ccclass('PopDYPlatform')
 export class PopDYPlatform extends Component {
     start() {
-
+        if (sys.platform != sys.Platform.BYTEDANCE_MINI_GAME) {
+            uiMgr.showToast("当前不是抖音环境")
+        }
     }
 
     update(deltaTime: number) {
