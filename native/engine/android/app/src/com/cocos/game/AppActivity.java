@@ -41,6 +41,7 @@ public class AppActivity extends CocosActivity {
         // DO OTHER INITIALIZATION BELOW
         SDKWrapper.shared().init(this);
         TestBridge.init((this));
+        NativeBaseBridge.init(this);
         // Android 13+ 动态申请通知权限
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
