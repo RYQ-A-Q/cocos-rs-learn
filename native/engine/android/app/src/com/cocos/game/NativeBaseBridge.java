@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
 import android.media.AudioManager;
@@ -39,6 +38,7 @@ public class NativeBaseBridge {
         JsbBridge.setCallback((arg0, arg1) -> {
             handleMessage(arg0, arg1);
         });
+
     }
 
     /* ===================== 入口 ===================== */
@@ -88,7 +88,7 @@ public class NativeBaseBridge {
         );
 
         PixelCopy.request(window, bitmap, result -> {
-            if (result == PixelFormat.UNKNOWN) {
+            if (result != PixelCopy.SUCCESS) {
                 reply("screenshot", "pixelcopy_fail");
                 return;
             }
