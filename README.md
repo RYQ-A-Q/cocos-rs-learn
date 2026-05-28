@@ -52,7 +52,7 @@ assets/UI-pop/
 |------|------|
 | **PopFuc** | 主入口面板，提供平台选择（抖音平台、安卓平台、功能列表） |
 | **PopDYPlatform** | 抖音平台功能测试：登录、侧边栏、分享、Banner广告、激励广告、插屏广告、添加桌面 |
-| **PopNativePlatform** | Android原生功能测试：震动、通知栏消息 |
+| **PopNativePlatform** | Android原生功能测试：消息、通知栏消息 |
 
 ### UI 组件
 
