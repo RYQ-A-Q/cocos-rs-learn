@@ -10,6 +10,8 @@ const { ccclass, property } = _decorator;
 @ccclass('DuckCard')
 export class DuckCard extends Component {
     @property({ type: Label })
+    private nameLabel: Label
+    @property({ type: Label })
     private clickLabel: Label
     @property({ type: Node })
     private duck: Node
@@ -24,6 +26,7 @@ export class DuckCard extends Component {
     init(ownerUser: IAcountItem) {
         this.ownerUser = ownerUser
         this.clickLabel.string = this.ownerUser.money + ""
+        this.nameLabel.string = this.ownerUser.name
     }
     private click() {
         if (!this.ownerUser) {
