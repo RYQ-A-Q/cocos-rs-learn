@@ -10,26 +10,19 @@
  */
 
 const WebSocket = require('ws');
-const http = require('http');
 const { v4: uuidv4 } = require('uuid');
 
-// 创建 HTTP 服务器
-const PORT = process.env.PORT || 5679;
-const server = http.createServer();
+// 创建 WebSocket 服务器
+const PORT = 5679
+const wss = new WebSocket.Server({ port: PORT });
 
 console.log(`WebSocket 服务器已启动，监听端口 ${PORT}`);
-
-// 创建游戏 WebSocket 服务器，指定路径 /game
-const gameWss = new WebSocket.Server({ 
-    server: server,
-    path: '/game'
-});
 
 // 存储所有连接的用户
 const users = new Map();
 
-gameWss.on('connection', (ws) => {
-    console.log('新客户端连接到 /game');
+wss.on('connection', (ws) => {
+    console.log('新客户端连接');
     
     let currentUser = null;
 
@@ -87,16 +80,6 @@ gameWss.on('connection', (ws) => {
         console.error('WebSocket 错误:', error);
     });
 });
-
-// TODO: 未来可以添加聊天 WebSocket 服务器
-// const chatWss = new WebSocket.Server({ 
-//     server: server,
-//     path: '/chat'
-// });
-// chatWss.on('connection', (ws) => {
-//     console.log('新客户端连接到 /chat');
-//     // 聊天逻辑...
-// });
 
 /**
  * 处理心跳
@@ -208,7 +191,7 @@ function broadcastUserList() {
         timestamp: Date.now()
     };
 
-    gameWss.clients.forEach((client) => {
+    wss.clients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify(syncMessage));
         }
@@ -226,11 +209,8 @@ function sendToClient(ws, message) {
     }
 }
 
-// 启动 HTTP 服务器
-server.listen(PORT, () => {
-    console.log('\n========================================');
-    console.log('WebSocket 服务器示例已启动');
-    console.log(`游戏服务地址: ws://localhost:${PORT}/game`);
-    console.log('按 Ctrl+C 停止服务器');
-    console.log('========================================\n');
-});
+console.log('\n========================================');
+console.log('WebSocket 服务器示例已启动');
+console.log(`服务器地址: ws://localhost:${PORT}`);
+console.log('按 Ctrl+C 停止服务器');
+console.log('========================================\n');

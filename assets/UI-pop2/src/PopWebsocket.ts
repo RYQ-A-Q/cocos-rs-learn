@@ -15,9 +15,6 @@ export class PopWebsocket extends Component {
     private wsManager: WebSocketManager;
     private networkService: NetworkService;
     
-    // 调试模式开关（生产环境设为 false）
-    private readonly DEBUG_MODE = true;
-    
     @property({ type: Node })
     private nodePar: Node;
     
@@ -32,21 +29,11 @@ export class PopWebsocket extends Component {
     
     public playerList: IAcountItem[] = [];
     
-    // WebSocket 服务器地址
+    // WebSocket 服务器地址（示例地址，实际使用时需要替换为真实服务器）
     // 注意：端口必须与 websocket-server/server.js 中的 PORT 一致
-    // /game 路径用于游戏相关功能（点击、金币等）
-    private readonly WS_URL = 'ws://localhost:5679/game';
+    private readonly WS_URL = 'ws://localhost:5679/ws';
     
     private isConnected: boolean = false;
-
-    /**
-     * 调试日志输出
-     */
-    private debugLog(...args: any[]) {
-        if (this.DEBUG_MODE) {
-            console.log('[PopWebsocket]', ...args);
-        }
-    }
 
     start() {
         // 1. 加载本地用户数据
@@ -67,7 +54,7 @@ export class PopWebsocket extends Component {
      * 点击"加入房间"按钮
      */
     private async onJoinRoomClick() {
-        this.debugLog('用户点击加入房间');
+        console.log('用户点击加入房间');
         
         // 禁用按钮防止重复点击
         if (this.joinRoomButton) {
@@ -93,7 +80,7 @@ export class PopWebsocket extends Component {
             };
             storageMgr.set("rs-learn-user", this.user);
         }
-        this.debugLog('当前用户:', this.user);
+        console.log('当前用户:', this.user);
     }
 
     /**
@@ -122,7 +109,7 @@ export class PopWebsocket extends Component {
     private setupCallbacks() {
         // 连接成功
         this.wsManager.setOnConnect(() => {
-            this.debugLog('WebSocket 已连接');
+            console.log('WebSocket 已连接');
             this.isConnected = true;
             this.updateStatus('已连接');
             
@@ -137,7 +124,7 @@ export class PopWebsocket extends Component {
 
         // 断开连接
         this.wsManager.setOnDisconnect((code, reason) => {
-            this.debugLog(`WebSocket 已断开: code=${code}, reason=${reason}`);
+            console.log(`WebSocket 已断开: code=${code}, reason=${reason}`);
             this.isConnected = false;
             this.updateStatus(`已断开 (${code})`);
             
@@ -150,13 +137,13 @@ export class PopWebsocket extends Component {
 
         // 接收消息
         this.wsManager.setOnMessage((message) => {
-            this.debugLog('收到消息:', message);
+            console.log('收到消息:', message);
             // 这里可以处理其他类型的消息
         });
 
         // 错误处理
         this.wsManager.setOnError((error) => {
-            console.error('[PopWebsocket] WebSocket 错误:', error);
+            console.error('WebSocket 错误:', error);
             this.updateStatus('连接错误');
             
             // 重新启用按钮
@@ -167,13 +154,13 @@ export class PopWebsocket extends Component {
 
         // 重连
         this.wsManager.setOnReconnect((attempt) => {
-            this.debugLog(`第 ${attempt} 次重连...`);
+            console.log(`第 ${attempt} 次重连...`);
             this.updateStatus(`重连中 (${attempt})`);
         });
 
         // 监听数据同步
         this.networkService.onSyncData((users) => {
-            this.debugLog('收到玩家数据同步:', users);
+            console.log('收到玩家数据同步:', users);
             this.syncPlayerData(users);
         });
     }
@@ -203,7 +190,7 @@ export class PopWebsocket extends Component {
     private async autoLogin() {
         try {
             const userInfo = await this.networkService.login(this.user);
-            this.debugLog('登录成功:', userInfo);
+            console.log('登录成功:', userInfo);
             
             // 更新本地用户数据
             this.user = userInfo;
@@ -212,7 +199,7 @@ export class PopWebsocket extends Component {
             // 显示 UI
             this.begin();
         } catch (error) {
-            console.error('[PopWebsocket] 登录失败:', error);
+            console.error('登录失败:', error);
             this.updateStatus('登录失败');
             
             // 重新启用按钮
@@ -292,7 +279,7 @@ export class PopWebsocket extends Component {
     onDestroy() {
         // 移除按钮事件监听
         if (this.joinRoomButton) {
-            this.joinRoomButton.node?.off(Button.EventType.CLICK, this.onJoinRoomClick, this);
+            this.joinRoomButton.node.off(Button.EventType.CLICK, this.onJoinRoomClick, this);
         }
         
         // 组件销毁时断开连接

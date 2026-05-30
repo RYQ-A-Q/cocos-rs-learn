@@ -31,7 +31,7 @@ npm start
 ```
 ========================================
 WebSocket 服务器示例已启动
-游戏服务地址: ws://localhost:5679/game
+服务器地址: ws://localhost:5679
 按 Ctrl+C 停止服务器
 ========================================
 ```
@@ -60,21 +60,8 @@ const PORT = process.env.PORT || 5679; // 修改这里的数字
 
 **客户端：** 编辑 `assets/UI-pop2/src/PopWebsocket.ts`
 ```typescript
-private readonly WS_URL = 'ws://localhost:5679/game'; // 游戏服务路径
-// 或
-private readonly WS_URL = 'ws://localhost:5679/chat'; // 聊天服务路径（待实现）
+private readonly WS_URL = 'ws://localhost:5679/ws'; // 修改端口号
 ```
-
-### 多路径架构说明
-
-当前服务器支持多个 WebSocket 路径：
-- `/game` - 游戏相关功能（点击、金币同步、用户列表等）
-- `/chat` - 聊天功能（预留，待实现）
-
-这种设计允许：
-1. 不同功能使用不同的 WebSocket 连接
-2. 独立管理不同服务的生命周期
-3. 更容易扩展新功能
 
 ## 📁 文件位置
 
