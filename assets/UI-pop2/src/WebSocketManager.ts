@@ -354,6 +354,10 @@ export class WebSocketManager {
         this.onMessageCallback = callback;
     }
 
+    getOnMessage(): OnMessageCallback | null {
+        return this.onMessageCallback;
+    }
+
     setOnError(callback: OnErrorCallback) {
         this.onErrorCallback = callback;
     }

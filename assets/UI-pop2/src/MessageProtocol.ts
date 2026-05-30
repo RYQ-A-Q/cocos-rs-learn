@@ -12,6 +12,17 @@ export interface IAcountItem {
 }
 
 /**
+ * 房间信息接口
+ */
+export interface IRoomInfo {
+    roomId: string;
+    roomName?: string;
+    maxPlayers?: number;
+    players: IAcountItem[];
+    createdAt?: number;
+}
+
+/**
  * 消息类型枚举
  */
 export enum MessageType {
@@ -28,6 +39,12 @@ export enum MessageType {
     CLICK_UPDATE_RESPONSE = 'click_update_response', // 点击更新响应
     SYNC_DATA = 'sync_data',                // 数据同步
     ERROR = 'error',                        // 错误消息
+    
+    // 房间相关消息
+    JOIN_ROOM = 'join_room',                // 加入房间
+    JOIN_ROOM_RESPONSE = 'join_room_response', // 加入房间响应
+    LEAVE_ROOM = 'leave_room',              // 离开房间
+    ROOM_UPDATE = 'room_update',            // 房间状态更新（服务器推送）
     
     // 自定义扩展消息（可根据需要添加）
     CUSTOM_EVENT = 'custom_event',          // 自定义事件
@@ -124,6 +141,53 @@ export interface IErrorMessage extends IMessage {
 }
 
 /**
+ * 加入房间请求消息
+ */
+export interface IJoinRoomRequest extends IMessage {
+    type: MessageType.JOIN_ROOM;
+    data: {
+        roomId: string;
+        userId: string;
+    };
+}
+
+/**
+ * 加入房间响应消息
+ */
+export interface IJoinRoomResponse extends IMessage {
+    type: MessageType.JOIN_ROOM_RESPONSE;
+    success: boolean;
+    message?: string;
+    data?: {
+        room: IRoomInfo;
+        isNewRoom: boolean; // true表示创建了新房间，false表示加入了已有房间
+    };
+}
+
+/**
+ * 离开房间请求消息
+ */
+export interface ILeaveRoomRequest extends IMessage {
+    type: MessageType.LEAVE_ROOM;
+    data: {
+        roomId: string;
+        userId: string;
+    };
+}
+
+/**
+ * 房间状态更新消息（服务器推送）
+ */
+export interface IRoomUpdateMessage extends IMessage {
+    type: MessageType.ROOM_UPDATE;
+    data: {
+        roomId: string;
+        players: IAcountItem[];
+        playerCount: number;
+    };
+}
+
+/**
  * 所有消息类型的联合类型
  */
 export type WebSocketMessage = 
@@ -133,7 +197,11 @@ export type WebSocketMessage =
     | IClickUpdateRequest
     | IClickUpdateResponse
     | ISyncDataMessage
-    | IErrorMessage;
+    | IErrorMessage
+    | IJoinRoomRequest
+    | IJoinRoomResponse
+    | ILeaveRoomRequest
+    | IRoomUpdateMessage;
 
 /**
  * 消息工具类

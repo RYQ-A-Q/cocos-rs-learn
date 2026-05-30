@@ -37,7 +37,9 @@ export class DuckCard extends Component {
 
     update(deltaTime: number) {
     }
-
+    protected onDisable(): void {
+        this.isInitialized=false
+    }
     /**
      * 初始化卡片
      * @param ownerUser 用户数据
