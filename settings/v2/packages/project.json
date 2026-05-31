@@ -5,5 +5,23 @@
       "width": 720,
       "height": 1280
     }
+  },
+  "custom_joint_texture_layouts": [],
+  "physics": {
+    "collisionGroups": [
+      {
+        "index": 1,
+        "name": "ALLCOLLIDER"
+      },
+      {
+        "index": 2,
+        "name": "All2"
+      }
+    ],
+    "collisionMatrix": {
+      "0": 7,
+      "1": 7,
+      "2": 7
+    }
   }
 }

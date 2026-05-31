@@ -17,6 +17,12 @@ export class PopFuc extends Component {
     private openWebsocket() {
         uiMgr.open('popWebsocket', 'popWebsocket', UIPanelType.normal, (node) => { }, 'UI-pop2')
     }
+    private openPhysics2D() {
+        uiMgr.open('popPhysics2D', 'popPhysics2D', UIPanelType.normal, (node) => { }, 'UI-pop')
+    }
+    private openShader() {
+        uiMgr.open('popShader', 'popShader', UIPanelType.normal, (node) => { }, 'UI-pop')
+    }
 
 
 }

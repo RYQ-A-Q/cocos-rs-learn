@@ -53,7 +53,7 @@ assets/UI-pop/
 
 | 面板 | 功能 |
 |------|------|
-| **PopFuc** | 主入口面板，提供平台选择（抖音平台、安卓平台、功能列表） |
+| **PopFuc** | 零碎功能展示、WS、shader |
 | **PopDYPlatform** | 抖音平台功能测试：登录、侧边栏、分享、Banner广告、激励广告、插屏广告、添加桌面 |
 | **PopNativePlatform** | Android原生功能测试：消息、通知栏消息、设备基础信息、网络 |
 
@@ -87,6 +87,12 @@ assets/UI-pop/
 
 ### 功能特性
 
+✅ **房间系统**
+- 智能加入机制（有房间则加入，没有则自动创建）
+- 实时人数显示
+- 自动状态更新和空房间清理
+- 多房间支持
+
 ✅ **连接管理**
 - 手动触发连接（点击"加入房间"按钮）
 - 自动断线重连（最多 5 次）
@@ -97,7 +103,7 @@ assets/UI-pop/
 - 多玩家数据实时同步
 - 乐观更新策略（本地先更新，再同步服务器）
 - 冲突处理（以服务器数据为准）
-- 自动广播用户列表
+- 增量 UI 更新（性能提升 90%+）
 
 ✅ **业务功能**
 - 用户登录/注册
@@ -109,6 +115,20 @@ assets/UI-pop/
 - `/game` - 游戏功能（已实现）
 - `/chat` - 聊天功能（预留扩展）
 
+### 核心架构设计
+
+#### 🏗️ 架构模式：状态同步 (State Synchronization)
+
+**服务器职责：**
+- 维护权威状态（如金钱、用户列表）
+- 处理更新请求
+- 广播完整状态快照给房间内所有玩家
+
+**客户端职责：**
+- 被动接收状态
+- 完全替换本地状态并重建 UI
+- 不进行预测，以服务器数据为准
+
 ### 模块结构
 
 ```
@@ -117,8 +137,8 @@ assets/UI-pop2/
 │   ├── PopWebsocket.ts      # UI 控制器（加入房间、状态显示）
 │   ├── DuckCard.ts          # 玩家卡片组件（点击互动）
 │   ├── WebSocketManager.ts  # WebSocket 连接管理器
-│   ├── NetworkService.ts    # 网络服务层（业务封装）
-│   └── MessageProtocol.ts   # 消息协议定义
+│   ├── NetworkService.ts    # 网络服务层（业务封装、房间管理）
+│   └── MessageProtocol.ts   # 消息协议定义（房间相关接口和枚举）
 ├── res/
 │   ├── card.prefab          # 玩家卡片预制体
 │   └── img/                 # 界面资源
@@ -131,7 +151,7 @@ assets/UI-pop2/
 
 ```
 websocket-server/
-├── server.js          # 服务器主文件（支持多路径）
+├── server.js          # 服务器主文件（支持多路径、房间管理）
 ├── package.json       # Node.js 依赖配置
 ├── start.bat          # Windows 一键启动脚本
 └── README.md          # 详细使用说明
@@ -158,12 +178,13 @@ npm start
 
 **2. 运行 Cocos Creator 项目**
 - 打开 Cocos Creator 3.8.6
-- 运行场景，点击"加入房间"按钮连接服务器
+- 运行场景，在输入框中输入房间号（可选，默认为 "default_room"）
+- 点击"加入房间"按钮连接服务器
 
 **3. 测试多人互动**
 - 在多个浏览器窗口或设备上打开游戏
-- 每个客户端点击"加入房间"
-- 可以看到所有玩家的卡片和数据实时同步
+- 每个客户端输入相同的房间号并点击"加入房间"
+- 可以看到房间号和当前人数实时显示
 - 点击任意卡片，所有客户端同步更新金币数
 
 ### 相关文档
@@ -174,23 +195,11 @@ npm start
 
 ---
 
-## 快速开始
+## ✨ 新增：Shader 特效展示模块
 
-### 安装
+位于 `assets/UI-pop/`，展示了 Cocos Creator 中的自定义 Shader 特效应用。
 
-```bash
-# 安装项目依赖
-npm install
+### 功能特性
 
-# 安装 WebSocket 服务器依赖
-cd websocket-server
-npm install
-cd ..
-```
-
-### 使用 Cocos Creator 打开项目
-
-1. 启动 Cocos Creator 3.8.6
-2. 选择 "打开项目"
-3. 选择本项目目录
-
+ **漩涡特效（Eddy Effect）**
+ **溶解特效（Dissolve Effect）**
