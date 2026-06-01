@@ -23,6 +23,9 @@ export class PopFuc extends Component {
     private openShader() {
         uiMgr.open('popShader', 'popShader', UIPanelType.normal, (node) => { }, 'UI-pop')
     }
+    private openEffect() {
+        uiMgr.open('popEffect', 'popEffect', UIPanelType.normal, (node) => { }, 'UI-pop3')
+    }
 
 
 }
