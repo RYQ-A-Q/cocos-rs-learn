@@ -9,6 +9,8 @@ export class PopShader extends Component {
     private eddy: Sprite
     @property(Sprite)
     private thawDie: Sprite
+    @property(Sprite)
+    private thawDie2: Sprite
     start() {
         this.play()
     }
@@ -49,7 +51,8 @@ export class PopShader extends Component {
     }
     private thawDieAction() {
         const mt = this.thawDie.getMaterialInstance(0)
-        if (!mt) { return }
+        const mt2 = this.thawDie2.getMaterialInstance(0)
+        if (!mt||!mt2) { return }
     
         const dissolveData = { value: 0 }
     
@@ -63,7 +66,7 @@ export class PopShader extends Component {
                     this.scheduleOnce(() => {
                         if (!this.node?.isValid) { return }
                         playTween()
-                    }, 0.5)
+                    }, 0.3)
                 })
                 .start()
         }
@@ -73,7 +76,10 @@ export class PopShader extends Component {
         this.schedule(() => {
             if (!this.node?.isValid) { return }
             mt.setProperty("dissolve", dissolveData.value)
+            mt2.setProperty("dissolve", dissolveData.value)
         }, 0)
+
+
     }
 }
 

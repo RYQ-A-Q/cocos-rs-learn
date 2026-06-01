@@ -203,3 +203,4 @@ npm start
 
  **漩涡特效（Eddy Effect）**
  **溶解特效（Dissolve Effect）**
+ **流光选择特效（BoardLight Effect）**
