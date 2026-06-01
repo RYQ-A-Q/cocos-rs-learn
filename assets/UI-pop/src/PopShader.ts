@@ -11,6 +11,10 @@ export class PopShader extends Component {
     private thawDie: Sprite
     @property(Sprite)
     private thawDie2: Sprite
+    @property(Sprite)
+    private iceSnow: Sprite
+    @property(Sprite)
+    private topSprite: Sprite
     start() {
         this.play()
     }
@@ -21,6 +25,8 @@ export class PopShader extends Component {
     private play() {
         this.eddyAction()
         this.thawDieAction()
+        this.iceSnowAction()
+        this.windTransitionAction()
     }
     private eddyAction() {
         const mt = this.eddy.getMaterialInstance(0)
@@ -79,7 +85,87 @@ export class PopShader extends Component {
             mt2.setProperty("dissolve", dissolveData.value)
         }, 0)
 
+    }
+    private iceSnowAction() {
 
+        const mt = this.iceSnow.getMaterialInstance(0);
+        if (!mt) { return; }
+    
+        const data = {
+            progress: 0,
+            time: 0
+        };
+    
+        const playTween = () => {
+    
+            data.progress = 0;
+    
+            mt.setProperty("meltProgress", 0);
+    
+            tween(data)
+                .delay(0.5)
+                .to(2, { progress: 1 }, { easing: "linear" })
+                .delay(0.5)
+                .call(() => {
+                    this.scheduleOnce(() => {
+                        if (!this.node?.isValid) { return; }
+                        playTween();
+                    }, 0.5);
+                })
+                .start();
+        };
+    
+        playTween();
+    
+        this.schedule((dt) => {
+    
+            if (!this.node?.isValid) { return; }
+    
+            data.time += dt;
+    
+            mt.setProperty("meltProgress", data.progress);
+            mt.setProperty("effectTime", data.time);
+    
+        }, 0);
+    }
+    private windTransitionAction() {
+
+        const mt = this.topSprite.getMaterialInstance(0);
+        if (!mt) { return; }
+    
+        const data = {
+            progress: 0,
+            time: 0
+        };
+    
+        const playTween = () => {
+    
+            data.progress = 0;
+    
+            tween(data)
+                .to(2, { progress: 1 }, { easing: "linear" })
+                .delay(0.5)
+                .call(() => {
+                    this.scheduleOnce(() => {
+                        if (!this.node?.isValid) { return; }
+                        playTween();
+                    }, 1);
+                })
+                .start();
+        };
+    
+        playTween();
+    
+        this.schedule((dt) => {
+    
+            if (!this.node?.isValid) { return; }
+    
+            data.time += dt;
+    
+            mt.setProperty("transitionProgress", data.progress);
+            mt.setProperty("effectTime", data.time);
+    
+        }, 0);
     }
 }
 

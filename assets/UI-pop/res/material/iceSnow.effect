@@ -1,0 +1,223 @@
+CCEffect %{
+  techniques:
+  - name: iceSnow
+    passes:
+    - vert: vs:vert
+      frag: fs:frag
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+      depthStencilState:
+        depthTest: false
+        depthWrite: false
+      rasterizerState:
+        cullMode: none
+      properties:
+        iceColor: {
+          value: [0.82,0.93,1.0,1.0],
+          editor: { type: color }
+        }
+
+        edgeColor: {
+          value: [0.4,0.85,1.0,1.0],
+          editor: { type: color }
+        }
+
+        meltProgress: {
+          value: 0.0,
+          editor: { range:[0.0,1.0,0.01] }
+        }
+
+        edgeWidth: {
+          value: 0.08,
+          editor: { range:[0.001,0.3,0.001] }
+        }
+
+        edgeIntensity: {
+          value: 2.0,
+          editor: { range:[0.0,5.0,0.01] }
+        }
+
+        iceStrength: {
+          value: 0.85,
+          editor: { range:[0.0,1.0,0.01] }
+        }
+
+        effectTime: {
+          value: 0.0
+        }
+}%
+
+CCProgram vs %{
+precision highp float;
+#include <cc-global>
+
+#if USE_LOCAL
+#include <builtin/uniforms/cc-local>
+#endif
+
+in vec3 a_position;
+in vec2 a_texCoord;
+
+out vec2 uv;
+
+#if USE_LOCAL
+in vec4 a_color;
+out vec4 v_color;
+#endif
+
+vec4 vert(){
+
+    vec4 pos = vec4(a_position,1.0);
+
+    #if USE_LOCAL
+    pos = cc_matWorld * pos;
+    v_color = a_color;
+    #endif
+
+    pos = cc_matViewProj * pos;
+
+    uv = a_texCoord;
+
+    return pos;
+}
+}%
+
+CCProgram fs %{
+precision highp float;
+
+#include <sprite-texture>
+#include <cc-global>
+
+in vec2 uv;
+
+#if USE_LOCAL
+in vec4 v_color;
+#endif
+
+uniform UBO{
+
+    vec4 iceColor;
+    vec4 edgeColor;
+
+    float meltProgress;
+    float edgeWidth;
+    float edgeIntensity;
+    float iceStrength;
+
+    float effectTime;
+};
+
+float hash(vec2 p){
+    return fract(
+        sin(
+            dot(
+                p,
+                vec2(127.1,311.7)
+            )
+        ) * 43758.5453123
+    );
+}
+
+float noise(vec2 p){
+
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+
+    float a = hash(i);
+    float b = hash(i + vec2(1.0,0.0));
+    float c = hash(i + vec2(0.0,1.0));
+    float d = hash(i + vec2(1.0,1.0));
+
+    vec2 u = f * f * (3.0 - 2.0 * f);
+
+    return mix(
+        mix(a,b,u.x),
+        mix(c,d,u.x),
+        u.y
+    );
+}
+
+vec4 frag(){
+
+    vec2 safeUV = clamp(
+        uv,
+        vec2(0.001),
+        vec2(0.999)
+    );
+
+    vec4 o =
+        texture(
+            cc_spriteTexture,
+            safeUV
+        );
+
+    float n =
+        noise(
+            safeUV * 8.0
+        );
+
+    float threshold =
+        meltProgress * 1.25 - 0.25;
+
+    float reveal =
+        step(
+            n,
+            threshold
+        );
+
+    float edge =
+        smoothstep(
+            threshold - edgeWidth,
+            threshold,
+            n
+        )
+        *
+        (
+            1.0 -
+            smoothstep(
+                threshold,
+                threshold + edgeWidth,
+                n
+            )
+        );
+
+    float sparkle =
+        0.5 +
+        0.5 *
+        sin(
+            effectTime * 8.0 +
+            n * 20.0
+        );
+
+    vec3 frozenColor =
+        mix(
+            o.rgb,
+            iceColor.rgb,
+            iceStrength
+        );
+
+    vec3 glow =
+        edgeColor.rgb *
+        edge *
+        edgeIntensity *
+        sparkle;
+
+    o.rgb =
+        mix(
+            frozenColor,
+            o.rgb,
+            reveal
+        );
+
+    o.rgb += glow;
+
+    #if USE_LOCAL
+    o *= v_color;
+    #endif
+
+    return o;
+}
+}%

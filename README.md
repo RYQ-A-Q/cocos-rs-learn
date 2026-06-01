@@ -195,7 +195,7 @@ npm start
 
 ---
 
-## ✨ 新增：Shader 特效展示模块
+## ✨ Shader 特效展示模块
 
 位于 `assets/UI-pop/`，展示了 Cocos Creator 中的自定义 Shader 特效应用。
 
@@ -204,3 +204,5 @@ npm start
  **漩涡特效（Eddy Effect）**
  **溶解特效（Dissolve Effect）**
  **流光选择特效（BoardLight Effect）**
+ **冰雪消融特效（iceSnow Effect）**
+ **展开特效（tranWin Effect）**

@@ -5,7 +5,7 @@
   "__editorExtras__": {},
   "_native": "",
   "_effectAsset": {
-    "__uuid__": "98911496-ad4b-4ff9-8895-aad896068108",
+    "__uuid__": "dd2a386e-765b-470b-9f82-b57aafacc846",
     "__expectedType__": "cc.EffectAsset"
   },
   "_techIdx": 0,
@@ -25,14 +25,8 @@
   ],
   "_props": [
     {
-      "lightColor": {
-        "__type__": "cc.Color",
-        "r": 215,
-        "g": 5,
-        "b": 255,
-        "a": 255
-      },
-      "glowsize": 0.2
+      "transitionProgress": 1,
+      "waveFrequency": 5
     }
   ]
 }
