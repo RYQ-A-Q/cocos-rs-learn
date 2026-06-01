@@ -7,6 +7,8 @@
 | 主界面 | 抖音平台功能 |
 |--------|-------------|
 | ![主界面](githubImg/home.jpg) | ![抖音平台功能](githubImg/dy.jpg) |
+| ![shader](githubImg/shader.gif) |
+
 
 ## 项目特性
 
