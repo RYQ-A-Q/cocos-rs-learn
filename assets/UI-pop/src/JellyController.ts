@@ -21,7 +21,6 @@ export class JellyController extends Component {
         if (this.softBody) {
             this._material = this.softBody.getMaterialInstance(0);
         }
-        this.setPhysicsParams(5, 0.7)
     }
 
     // ==================== 公共方法 ====================
