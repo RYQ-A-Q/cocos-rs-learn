@@ -5,7 +5,7 @@
   "__editorExtras__": {},
   "_native": "",
   "_effectAsset": {
-    "__uuid__": "dd6b3c6b-f882-4235-b915-25cd74b70969",
+    "__uuid__": "e5b58af5-b59c-4eee-ac98-685f7a46b37e",
     "__expectedType__": "cc.EffectAsset"
   },
   "_techIdx": 0,
@@ -24,6 +24,9 @@
     }
   ],
   "_props": [
-    {}
+    {
+      "stiffness": 1,
+      "damping": 0.5
+    }
   ]
 }

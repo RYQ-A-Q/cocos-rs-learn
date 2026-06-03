@@ -1589,7 +1589,7 @@
       "__id__": 43
     },
     "asset": {
-      "__uuid__": "43a4550e-bb99-4f2c-9c3e-a16fdbe5eafc",
+      "__uuid__": "3e1392db-2859-4220-b664-88c27d223dbb",
       "__expectedType__": "cc.Prefab"
     },
     "fileId": "eadmpKEo5HqYo/5/CgvuAQ",
@@ -1601,7 +1601,7 @@
   },
   {
     "__type__": "cc.PrefabInstance",
-    "fileId": "86NwF5zS5H+pTt1BsHGjBc",
+    "fileId": "54AxcEDDJDTLETn+etVnLL",
     "prefabRootNode": null,
     "mountedChildren": [],
     "mountedComponents": [],
@@ -1629,7 +1629,7 @@
     "propertyPath": [
       "_name"
     ],
-    "value": "popEffect"
+    "value": "popShader"
   },
   {
     "__type__": "cc.TargetInfo",

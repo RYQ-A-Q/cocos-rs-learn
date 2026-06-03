@@ -1,4 +1,7 @@
 import { tween } from 'cc';
+import { Vec2 } from 'cc';
+import { Vec4 } from 'cc';
+import { UITransform } from 'cc';
 import { Sprite } from 'cc';
 import { _decorator, Component, Node } from 'cc';
 const { ccclass, property } = _decorator;
@@ -58,14 +61,14 @@ export class PopShader extends Component {
     private thawDieAction() {
         const mt = this.thawDie.getMaterialInstance(0)
         const mt2 = this.thawDie2.getMaterialInstance(0)
-        if (!mt||!mt2) { return }
-    
+        if (!mt || !mt2) { return }
+
         const dissolveData = { value: 0 }
-    
+
         const playTween = () => {
             dissolveData.value = 0
             mt.setProperty("dissolve", 0)
-    
+
             tween(dissolveData)
                 .to(1.5, { value: 1 }, { easing: "linear" })
                 .call(() => {
@@ -76,9 +79,9 @@ export class PopShader extends Component {
                 })
                 .start()
         }
-    
+
         playTween()
-    
+
         this.schedule(() => {
             if (!this.node?.isValid) { return }
             mt.setProperty("dissolve", dissolveData.value)
@@ -90,18 +93,18 @@ export class PopShader extends Component {
 
         const mt = this.iceSnow.getMaterialInstance(0);
         if (!mt) { return; }
-    
+
         const data = {
             progress: 0,
             time: 0
         };
-    
+
         const playTween = () => {
-    
+
             data.progress = 0;
-    
+
             mt.setProperty("meltProgress", 0);
-    
+
             tween(data)
                 .delay(0.5)
                 .to(2, { progress: 1 }, { easing: "linear" })
@@ -114,34 +117,35 @@ export class PopShader extends Component {
                 })
                 .start();
         };
-    
+
         playTween();
-    
+
         this.schedule((dt) => {
-    
+
             if (!this.node?.isValid) { return; }
-    
+
             data.time += dt;
-    
+
             mt.setProperty("meltProgress", data.progress);
             mt.setProperty("effectTime", data.time);
-    
+
         }, 0);
     }
+    
     private windTransitionAction() {
 
         const mt = this.topSprite.getMaterialInstance(0);
         if (!mt) { return; }
-    
+
         const data = {
             progress: 0,
             time: 0
         };
-    
+
         const playTween = () => {
-    
+
             data.progress = 0;
-    
+
             tween(data)
                 .to(2, { progress: 1 }, { easing: "linear" })
                 .delay(0.5)
@@ -153,18 +157,18 @@ export class PopShader extends Component {
                 })
                 .start();
         };
-    
+
         playTween();
-    
+
         this.schedule((dt) => {
-    
+
             if (!this.node?.isValid) { return; }
-    
+
             data.time += dt;
-    
+
             mt.setProperty("transitionProgress", data.progress);
             mt.setProperty("effectTime", data.time);
-    
+
         }, 0);
     }
 }
