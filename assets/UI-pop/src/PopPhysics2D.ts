@@ -33,11 +33,11 @@ export class PopPhysics2D extends Component {
             vec.x +=  Math.random() * 20-20
             wall.setPosition(vec.clone())
             this.wallPar.addChild(wall)
-            let wall2 = instantiate(this.wallTemple2)
-            vec.x +=  Math.random() * 20-20
-            vec.y +=  Math.random() * 20-20
-            wall2.setPosition(vec.clone())
-            this.wallPar.addChild(wall2)
+            // let wall2 = instantiate(this.wallTemple2)
+            // vec.x +=  Math.random() * 20-20
+            // vec.y +=  Math.random() * 20-20
+            // wall2.setPosition(vec.clone())
+            // this.wallPar.addChild(wall2)
             console.log("当前总数："+this.wallPar.children.length)
     }
     private switchPhysicsDraw() {

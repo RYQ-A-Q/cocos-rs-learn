@@ -25,14 +25,7 @@
   ],
   "_props": [
     {
-      "lightColor": {
-        "__type__": "cc.Color",
-        "r": 215,
-        "g": 5,
-        "b": 255,
-        "a": 255
-      },
-      "glowsize": 0.2
+      "glowWidth": 0.2
     }
   ]
 }

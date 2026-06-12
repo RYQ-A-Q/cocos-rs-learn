@@ -1,24 +1,23 @@
 CCEffect %{
 techniques:
-  - name: jelly
-    passes:
-      - vert: vs:vert
-        frag: fs:frag
-        blendState:
-          targets:
-            - blend: true
-              blendSrc: src_alpha
-              blendDst: one_minus_src_alpha
-        depthStencilState:
-          depthTest: false
-          depthWrite: false
-        rasterizerState:
-          cullMode: none
-        properties:
-          forceCount: { value: 0.0 }
-          stiffness: { value: 12.0 }
-          damping: { value: 0.9 }
+- passes:
+  - vert: vs:vert
+    frag: fs:frag
+    blendState:
+      targets:
+      - blend: true
+        blendSrc: src_alpha
+        blendDst: one_minus_src_alpha
+    rasterizerState:
+      cullMode: none
+    depthStencilState:
+      depthTest: false
+      depthWrite: false
+    properties:
+      jellyOffset: { value: [0,0,0,0] }
+      jellyStrength: { value: 0.0 }
 }%
+
 CCProgram vs %{
 precision highp float;
 
@@ -31,17 +30,29 @@ in vec4 a_color;
 out vec2 uv;
 out vec4 v_color;
 
+uniform UBO {
+    vec4 jellyOffset;
+    float jellyStrength;
+};
+
 vec4 vert () {
 
-    vec4 pos = vec4(a_position, 1.0);
-    pos = cc_matViewProj * pos;
+    vec3 pos = a_position;
+
+    vec2 center = vec2(0.5,0.5);
+    vec2 localUV = a_texCoord - center;
+
+    float falloff = 1.0 - length(localUV);
+
+    pos.xy += jellyOffset.xy * falloff * jellyStrength;
 
     uv = a_texCoord;
     v_color = a_color;
 
-    return pos;
+    return cc_matViewProj * vec4(pos,1.0);
 }
 }%
+
 CCProgram fs %{
 precision highp float;
 
@@ -50,77 +61,10 @@ precision highp float;
 in vec2 uv;
 in vec4 v_color;
 
-uniform UBO {
-
-    vec4 forcePos0;
-    vec4 forcePos1;
-    vec4 forcePos2;
-    vec4 forcePos3;
-    vec4 forcePos4;
-    vec4 forcePos5;
-    vec4 forcePos6;
-    vec4 forcePos7;
-
-    vec4 forceDir0;
-    vec4 forceDir1;
-    vec4 forceDir2;
-    vec4 forceDir3;
-    vec4 forceDir4;
-    vec4 forceDir5;
-    vec4 forceDir6;
-    vec4 forceDir7;
-
-    vec4 forceStr0;
-    vec4 forceStr1;
-    vec4 forceStr2;
-    vec4 forceStr3;
-    vec4 forceStr4;
-    vec4 forceStr5;
-    vec4 forceStr6;
-    vec4 forceStr7;
-
-    float forceCount;
-    float stiffness;
-    float damping;
-};
-
-vec2 applyForce(vec2 uv, vec2 p, vec2 d, float s) {
-
-    vec2 delta = uv - p;
-    float dist = length(delta);
-
-    dist = max(dist, 0.0001);
-
-    float falloff = exp(-dist * stiffness);
-
-    return d * s * falloff;
-}
-
 vec4 frag () {
 
-    vec2 offset = vec2(0.0);
+    vec4 col = texture(cc_spriteTexture, uv);
 
-    int count = int(clamp(forceCount, 0.0, 8.0));
-
-    if (count > 0) offset += applyForce(uv, forcePos0.xy, normalize(forceDir0.xy), forceStr0.x);
-    if (count > 1) offset += applyForce(uv, forcePos1.xy, normalize(forceDir1.xy), forceStr1.x);
-    if (count > 2) offset += applyForce(uv, forcePos2.xy, normalize(forceDir2.xy), forceStr2.x);
-    if (count > 3) offset += applyForce(uv, forcePos3.xy, normalize(forceDir3.xy), forceStr3.x);
-    if (count > 4) offset += applyForce(uv, forcePos4.xy, normalize(forceDir4.xy), forceStr4.x);
-    if (count > 5) offset += applyForce(uv, forcePos5.xy, normalize(forceDir5.xy), forceStr5.x);
-    if (count > 6) offset += applyForce(uv, forcePos6.xy, normalize(forceDir6.xy), forceStr6.x);
-    if (count > 7) offset += applyForce(uv, forcePos7.xy, normalize(forceDir7.xy), forceStr7.x);
-
-    offset *= damping;
-
-    vec2 uv2 = clamp(uv - offset, vec2(0.001), vec2(0.999));
-
-    vec4 col = texture(cc_spriteTexture, uv2);
-
-    float glow = 1.0 - length(offset) * 6.0;
-    col.rgb += glow * 0.15;
-
-    // ⭐关键：Sprite color 生效
     col *= v_color;
 
     return col;

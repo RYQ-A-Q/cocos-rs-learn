@@ -26,7 +26,7 @@
   "_props": [
     {
       "stiffness": 5,
-      "damping": 0.7
+      "damping": 0.2
     }
   ]
 }
