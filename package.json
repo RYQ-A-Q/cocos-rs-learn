@@ -2,7 +2,7 @@
   "name": "cocos-rs-learn",
   "uuid": "8de580fe-c644-4eea-bf79-17a0e5d2b3b5",
   "creator": {
-    "version": "3.8.6"
+    "version": "3.8.7"
   },
   "dependencies": {
     "crypto-es": "^2.1.0"
