@@ -4,6 +4,7 @@ import { Vec3 } from 'cc';
 import { tween } from 'cc';
 import { UIOpacity } from 'cc';
 import { Tween } from 'cc';
+import { NumberUtils } from '../../RS/core/utils/NumberUtils';
 const { ccclass, property } = _decorator;
 const WIDTH = 700
 const HEIGHT = 850
@@ -105,6 +106,17 @@ export class PopMotionCurve extends Component {
     }
     private playCircle2() {
         this.moreCircleAni();
+    }
+    private playScattering() {
+        // 创建5颗子弹并发射
+        const bullets: Node[] = [];
+        for (let i = 0; i < 5; i++) {
+            const bullet = this.getNewItem();
+            bullet.setPosition(0, -300, 0);
+            bullets.push(bullet);
+        }
+
+        this.scattering(bullets, NumberUtils.degToRad(90), NumberUtils.degToRad(60));
     }
 
     /**
@@ -347,6 +359,97 @@ export class PopMotionCurve extends Component {
                 if (onComplete) onComplete();
             })
             .start();
+    }
+
+    /**
+     * 散弹枪发射动画（持续加速，无速度上限）
+     * @param nodes 要发射的节点数组
+     * @param baseAngle 基础发射角度（弧度，0为向右，逆时针为正）
+     * @param spreadAngle 扩散角度范围（弧度，总扩散角度）
+     * @param initialSpeed 初始速度
+     * @param gravity 重力系数
+     * @param duration 动画持续时间
+     * @param acceleration 加速度（持续加速，无上限）
+     */
+    private scattering(
+        nodes: Node[],
+        baseAngle: number = 0,
+        spreadAngle: number = NumberUtils.degToRad(30), // 30度扩散
+        initialSpeed: number = 800, // 初始速度
+        gravity: number = 0,
+        duration: number = 1,
+        acceleration: number = 2000 // 持续加速度，无速度上限
+    ) {
+        const count = nodes.length;
+
+        // 计算每个子弹的发射角度
+        const angles: number[] = [];
+        if (count === 1) {
+            angles.push(baseAngle);
+        } else {
+            const startAngle = baseAngle - spreadAngle / 2;
+            const step = spreadAngle / (count - 1);
+            for (let i = 0; i < count; i++) {
+                // 添加少量随机偏移使效果更自然
+                const randomOffset = (Math.random() - 0.5) * 0.1;
+                angles.push(startAngle + step * i + randomOffset);
+            }
+        }
+
+        nodes.forEach((node, index) => {
+            node.active = true;
+            let uiop = node.getComponent(UIOpacity);
+            uiop.opacity = 0;
+            tween(uiop)
+                .to(0.05, { opacity: 255 })
+                .start();
+            const startPos = node.position.clone();
+            const angle = angles[index];
+
+            // 计算方向向量
+            const dirX = Math.cos(angle);
+            const dirY = Math.sin(angle);
+
+            // 计算总位移（持续加速 + 重力）
+            const totalDx = initialSpeed * dirX * duration + 0.5 * acceleration * dirX * duration * duration;
+            const totalDy = initialSpeed * dirY * duration + 0.5 * acceleration * dirY * duration * duration - 0.5 * gravity * duration * duration;
+
+            const endPos = new Vec3(
+                startPos.x + totalDx,
+                startPos.y + totalDy,
+                startPos.z
+            );
+
+            let elapsed = 0;
+
+            tween(node)
+                .to(duration, { position: endPos }, {
+                    easing: 'linear',
+                    onUpdate: (target: Node, ratio: number) => {
+                        elapsed = ratio * duration;
+                        
+                        // 计算当前速度（持续加速，无上限）
+                        const currentSpeed = initialSpeed + acceleration * elapsed;
+                        
+                        // 计算当前位置（持续加速 + 重力）
+                        const vx = dirX * currentSpeed;
+                        const vy = dirY * currentSpeed;
+                        const x = startPos.x + initialSpeed * dirX * elapsed + 0.5 * acceleration * dirX * elapsed * elapsed;
+                        const y = startPos.y + initialSpeed * dirY * elapsed + 0.5 * acceleration * dirY * elapsed * elapsed - 0.5 * gravity * elapsed * elapsed;
+
+                        target.setPosition(x, y, startPos.z);
+
+                        // 计算旋转角度（朝向运动方向）
+                        const vyCurrent = vy - gravity * elapsed;
+                        const dirAngle = Math.atan2(vyCurrent, vx) * 180 / Math.PI;
+                        target.setRotationFromEuler(0, 0, dirAngle - 90);
+                    }
+                })
+                .call(() => {
+                    node.active = false;
+                })
+                .start();
+        });
     }
 
     /**

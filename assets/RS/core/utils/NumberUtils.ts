@@ -1,6 +1,6 @@
 import { Vec3 } from "cc";
 export class NumberUtils {
-    
+
     /**
      * 保留指定位小数
      * @param value 原始数字
@@ -459,5 +459,18 @@ export class NumberUtils {
         const randomSerialCode = randomStr(4) + "-" + dateStr + "-" + randomStr(4);
         console.log(`生成随机版本序列码：${randomSerialCode}`);
         return randomSerialCode
+    }
+    /**
+     * 角度转弧度
+     */
+    public static degToRad(deg: number): number {
+        return deg * Math.PI / 180;
+    }
+
+    /**
+     * 弧度转角度
+     */
+    public static radToDeg(rad: number): number {
+        return rad * 180 / Math.PI;
     }
 }
