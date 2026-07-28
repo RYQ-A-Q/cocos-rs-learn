@@ -21,7 +21,7 @@ export class PopMotionCurve extends Component {
     private bezierSteps: number = 30 // 贝塞尔曲线步数
 
     start() {
-      
+
     }
 
     update(deltaTime: number) {
@@ -44,6 +44,59 @@ export class PopMotionCurve extends Component {
         // 使用贝塞尔曲线抛物线
         this.flyParabolaBezier(start, end, this.jumpHeight, this.duration);
     }
+    /**播放圆形动画 */
+    private playCircle() {
+        // // 1. 转1圈
+        // this.flyCircle(
+        //     new Vec3(0, 0, 0),  // 圆心
+        //     200,                 // 半径
+        //     1,                   // 1圈
+        //     1,                   // 每圈1秒
+        //     true,                // 顺时针
+        //     0,                   // 从右侧开始
+        //     0,                   // 无延迟
+        //     () => console.log('完成')
+        // );
+
+        // // 2. 转3圈
+        // this.flyCircle(
+        //     new Vec3(100, 100, 0),
+        //     150,
+        //     3,    // 3圈
+        //     0.5,  // 每圈0.5秒
+        //     false // 逆时针
+        // );
+
+        // // 3. 无限循环（关键：rotations = -1）
+        // this.flyCircle(
+        //     new Vec3(0, 0, 0),
+        //     200,
+        //     -1,   // -1表示无限循环
+        //     1,    // 每圈1秒
+        //     true, // 顺时针
+        //     0     // 从右侧开始
+        // );
+
+        // // 4. 从45度开始无限旋转
+        // this.flyCircle(
+        //     new Vec3(0, 0, 0),
+        //     200,
+        //     -1,
+        //     0.8,
+        //     true,
+        //     Math.PI / 4 // 从45度开始
+        // );
+
+        // 5. 延迟1秒后无限旋转
+        this.flyCircle(
+            new Vec3(0, 0, 0),
+            200,
+            -1,
+            1,
+            true,
+            0,
+        );
+    }
 
     /**
      * 计算两点之间的角度（度）
@@ -54,7 +107,7 @@ export class PopMotionCurve extends Component {
     private calculateAngle(from: Vec3, to: Vec3): number {
         const dx = to.x - from.x;
         const dy = to.y - from.y;
-        
+
         // 计算与Y轴正方向的夹角（弧度）
         let angle = Math.atan2(dx, dy);
         // 转换为角度
@@ -102,16 +155,16 @@ export class PopMotionCurve extends Component {
         const p0 = startPos.clone();
         // 终点
         const p3 = endPos.clone();
-        
+
         // 计算中点和方向
         const midX = (startPos.x + endPos.x) / 2;
         const midY = Math.max(startPos.y, endPos.y) + jumpHeight;
-        
+
         // 计算水平距离
         const dx = endPos.x - startPos.x;
         const dy = endPos.y - startPos.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
+
         // 控制点1：靠近起点，稍微抬高
         const t1 = 0.3;
         const p1 = new Vec3(
@@ -119,7 +172,7 @@ export class PopMotionCurve extends Component {
             startPos.y + dy * t1 + jumpHeight * 0.4,
             (startPos.z + endPos.z) / 2
         );
-        
+
         // 控制点2：靠近终点，稍微抬高
         const t2 = 0.7;
         const p2 = new Vec3(
@@ -127,7 +180,7 @@ export class PopMotionCurve extends Component {
             startPos.y + dy * t2 + jumpHeight * 0.4,
             (startPos.z + endPos.z) / 2
         );
-        
+
         return { p0, p1, p2, p3 };
     }
 
@@ -149,10 +202,10 @@ export class PopMotionCurve extends Component {
 
         // 计算角度
         const angle = this.calculateAngle(startPos, endPos);
-        
+
         // 获取贝塞尔控制点（使用三次贝塞尔曲线）
         const { p0, p1, p2, p3 } = this.getBezierControlPoints(startPos, endPos, jumpHeight);
-        
+
         // 存储轨迹点用于调试（可选）
         const trajectoryPoints: Vec3[] = [];
         for (let i = 0; i <= this.bezierSteps; i++) {
@@ -163,7 +216,7 @@ export class PopMotionCurve extends Component {
 
         // 使用Tween驱动贝塞尔曲线
         let progress = 0;
-        
+
         tween(item)
             .delay(delay)
             .to(duration, { position: endPos }, {
@@ -172,7 +225,7 @@ export class PopMotionCurve extends Component {
                     // 使用三次贝塞尔曲线计算位置
                     const pos = this.cubicBezier(ratio, p0, p1, p2, p3);
                     target.setPosition(pos);
-                    
+
                     // 动态计算旋转角度（根据运动方向）
                     if (ratio < 1) {
                         const nextRatio = Math.min(ratio + 0.01, 1);
@@ -224,7 +277,7 @@ export class PopMotionCurve extends Component {
                     // 使用二次贝塞尔曲线
                     const pos = this.quadraticBezier(ratio, startPos, midPos, endPos);
                     target.setPosition(pos);
-                    
+
                     // 动态旋转
                     if (ratio < 1) {
                         const nextRatio = Math.min(ratio + 0.01, 1);
@@ -248,7 +301,7 @@ export class PopMotionCurve extends Component {
     private multiPointBezier(t: number, points: Vec3[]): Vec3 {
         if (points.length === 0) return new Vec3(0, 0, 0);
         if (points.length === 1) return points[0].clone();
-        
+
         const newPoints: Vec3[] = [];
         for (let i = 0; i < points.length - 1; i++) {
             const p0 = points[i];
@@ -258,7 +311,7 @@ export class PopMotionCurve extends Component {
             const z = (1 - t) * p0.z + t * p1.z;
             newPoints.push(new Vec3(x, y, z));
         }
-        
+
         return this.multiPointBezier(t, newPoints);
     }
 
@@ -294,5 +347,99 @@ export class PopMotionCurve extends Component {
                 if (onComplete) onComplete();
             })
             .start();
+    }
+    /**
+    * 圆形运动轨迹动画（支持单次和循环）
+    * @param centerPos 圆心位置
+    * @param radius 半径
+    * @param rotations 旋转圈数（-1表示无限循环）
+    * @param duration 每圈持续时间（秒）
+    * @param clockwise 是否顺时针
+    * @param startAngle 起始角度（弧度）
+    * @param delay 延迟时间（秒）
+    * @param onComplete 完成回调（仅非循环时生效）
+    */
+    private flyCircle(
+        centerPos: Vec3,
+        radius: number,
+        rotations: number = 1,
+        duration: number = 1,
+        clockwise: boolean = true,
+        startAngle: number = 0,
+        delay: number = 0,
+        onComplete?: () => void
+    ) {
+        const item = this.getNewItem();
+        item.active = true;
+
+        // 计算起始位置
+        const startX = centerPos.x + radius * Math.cos(startAngle);
+        const startY = centerPos.y + radius * Math.sin(startAngle);
+        item.setPosition(startX, startY, centerPos.z);
+
+        const direction = clockwise ? -1 : 1;
+        let currentAngle = startAngle;
+        let isLooping = rotations === -1;
+        let completedRotations = 0;
+
+        // 单次动画
+        const doOnce = () => {
+            const totalAngle = rotations * 2 * Math.PI * direction;
+
+            tween(item)
+                .delay(delay)
+                .to(duration * rotations, { position: centerPos }, {
+                    easing: 'linear',
+                    onUpdate: (target: Node, ratio: number) => {
+                        const angle = startAngle + totalAngle * ratio;
+                        const x = centerPos.x + radius * Math.cos(angle);
+                        const y = centerPos.y + radius * Math.sin(angle);
+                        target.setPosition(x, y, centerPos.z);
+
+                        const tangentAngle = angle + (clockwise ? -Math.PI / 2 : Math.PI / 2);
+                        target.setRotationFromEuler(0, 0, tangentAngle * 180 / Math.PI);
+                    }
+                })
+                .call(() => {
+                    item.active = false;
+                    if (onComplete) onComplete();
+                })
+                .start();
+        };
+
+        // 循环动画
+        const doLoop = () => {
+            const doOneLoop = () => {
+                tween(item)
+                    .delay(delay)
+                    .to(duration, { position: centerPos }, {
+                        easing: 'linear',
+                        onUpdate: (target: Node, ratio: number) => {
+                            const angle = currentAngle + 2 * Math.PI * direction * ratio;
+                            const x = centerPos.x + radius * Math.cos(angle);
+                            const y = centerPos.y + radius * Math.sin(angle);
+                            target.setPosition(x, y, centerPos.z);
+
+                            const tangentAngle = angle + (clockwise ? -Math.PI / 2 : Math.PI / 2);
+                            target.setRotationFromEuler(0, 0, tangentAngle * 180 / Math.PI);
+                        }
+                    })
+                    .call(() => {
+                        currentAngle += 2 * Math.PI * direction;
+                        completedRotations++;
+                        doOneLoop(); // 继续下一圈
+                    })
+                    .start();
+            };
+
+            doOneLoop();
+        };
+
+        // 根据参数选择
+        if (isLooping) {
+            doLoop();
+        } else {
+            doOnce();
+        }
     }
 }
