@@ -2,6 +2,7 @@ import { _decorator, Component, Node } from 'cc';
 import { NodeUtils } from '../../RS/core/utils/NodeUtils';
 import { Vec3 } from 'cc';
 import { tween } from 'cc';
+import { UIOpacity } from 'cc';
 const { ccclass, property } = _decorator;
 const WIDTH = 700
 const HEIGHT = 850
@@ -90,7 +91,7 @@ export class PopMotionCurve extends Component {
         // 5. 延迟1秒后无限旋转
         this.flyCircle(
             new Vec3(0, 0, 0),
-            200,
+            100,
             -1,
             1,
             true,
@@ -108,8 +109,8 @@ export class PopMotionCurve extends Component {
         const dx = to.x - from.x;
         const dy = to.y - from.y;
 
-        // 计算与Y轴正方向的夹角（弧度）
-        let angle = Math.atan2(dx, dy);
+        // 计算与X轴正方向的夹角（弧度），向右为0度，逆时针为正
+        let angle = Math.atan2(dy, dx);
         // 转换为角度
         return angle * 180 / Math.PI;
     }
@@ -199,7 +200,11 @@ export class PopMotionCurve extends Component {
         const item = this.getNewItem();
         item.active = true;
         item.setPosition(startPos);
-
+        let uiop = item.getComponent(UIOpacity);
+        uiop.opacity = 0;
+        tween(uiop)
+            .to(0.05, { opacity: 255 })
+            .start();
         // 计算角度
         const angle = this.calculateAngle(startPos, endPos);
 
@@ -232,62 +237,12 @@ export class PopMotionCurve extends Component {
                         const nextPos = this.cubicBezier(nextRatio, p0, p1, p2, p3);
                         const dirAngle = this.calculateAngle(pos, nextPos);
                         // 让节点朝向运动方向
-                        target.setRotationFromEuler(0, 0, -dirAngle * 0.2);
+                        target.setRotationFromEuler(0, 0, dirAngle - 90);
                     }
                 }
             })
             .call(() => {
                 // 恢复初始状态
-                item.setRotationFromEuler(0, 0, 0);
-                item.active = false;
-                if (onComplete) onComplete();
-            })
-            .start();
-    }
-
-    /**
-     * 使用二次贝塞尔曲线的简化版本
-     */
-    private flyParabolaQuadratic(
-        startPos: Vec3,
-        endPos: Vec3,
-        jumpHeight: number = 300,
-        duration: number = 0.8,
-        delay: number = 0,
-        onComplete?: () => void
-    ) {
-        const item = this.getNewItem();
-        item.active = true;
-        item.setPosition(startPos);
-
-        // 计算顶点（控制点）
-        const midPos = new Vec3(
-            (startPos.x + endPos.x) / 2,
-            Math.max(startPos.y, endPos.y) + jumpHeight,
-            (startPos.z + endPos.z) / 2
-        );
-
-        const angle = this.calculateAngle(startPos, endPos);
-
-        tween(item)
-            .delay(delay)
-            .to(duration, { position: endPos }, {
-                easing: 'linear',
-                onUpdate: (target: Node, ratio: number) => {
-                    // 使用二次贝塞尔曲线
-                    const pos = this.quadraticBezier(ratio, startPos, midPos, endPos);
-                    target.setPosition(pos);
-
-                    // 动态旋转
-                    if (ratio < 1) {
-                        const nextRatio = Math.min(ratio + 0.01, 1);
-                        const nextPos = this.quadraticBezier(nextRatio, startPos, midPos, endPos);
-                        const dirAngle = this.calculateAngle(pos, nextPos);
-                        target.setRotationFromEuler(0, 0, -dirAngle * 0.2);
-                    }
-                }
-            })
-            .call(() => {
                 item.setRotationFromEuler(0, 0, 0);
                 item.active = false;
                 if (onComplete) onComplete();
