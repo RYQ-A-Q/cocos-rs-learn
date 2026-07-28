@@ -116,6 +116,20 @@ export class PopMotionCurve extends Component {
     }
 
     /**
+     * 将角度归一化到 [-π, π] 范围（弧度）
+     * 防止角度无限累加导致精度下降
+     */
+    private normalizeAngle(angle: number): number {
+        angle = angle % (2 * Math.PI);
+        if (angle > Math.PI) {
+            angle -= 2 * Math.PI;
+        } else if (angle < -Math.PI) {
+            angle += 2 * Math.PI;
+        }
+        return angle;
+    }
+
+    /**
      * 二次贝塞尔曲线计算
      * @param t 0-1之间的插值
      * @param p0 起点
@@ -326,7 +340,11 @@ export class PopMotionCurve extends Component {
     ) {
         const item = this.getNewItem();
         item.active = true;
-
+        let uiop = item.getComponent(UIOpacity);
+        uiop.opacity = 0;
+        tween(uiop)
+            .to(0.05, { opacity: 255 })
+            .start();
         // 计算起始位置
         const startX = centerPos.x + radius * Math.cos(startAngle);
         const startY = centerPos.y + radius * Math.sin(startAngle);
@@ -381,6 +399,7 @@ export class PopMotionCurve extends Component {
                     })
                     .call(() => {
                         currentAngle += 2 * Math.PI * direction;
+                        currentAngle = this.normalizeAngle(currentAngle);
                         completedRotations++;
                         doOneLoop(); // 继续下一圈
                     })
