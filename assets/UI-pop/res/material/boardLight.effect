@@ -1,53 +1,58 @@
 CCEffect %{
-
 techniques:
+  - name: boardLight
+    passes:
+      - vert: vs:vert
+        frag: fs:frag
 
-- name: colorize
+        blendState:
+          targets:
+            - blend: true
+              blendSrc: src_alpha
+              blendDst: one_minus_src_alpha
 
-  passes:
+        depthStencilState:
+          depthTest: false
+          depthWrite: false
 
-  - vert: vs:vert
-    frag: fs:frag
+        rasterizerState:
+          cullMode: none
 
-    blendState:
-      targets:
+        properties:
 
-      - blend: true
-        blendSrc: src_alpha
-        blendDst: one_minus_src_alpha
+          glowColor:
+            value: [0.2, 0.8, 1.0, 1.0]
+            editor:
+              type: color
 
+          tintColor:
+            value: [1.0, 1.0, 1.0, 1.0]
+            editor:
+              type: color
 
-    depthStencilState:
+          outlineColor:
+            value: [1.0, 1.0, 1.0, 1.0]
+            editor:
+              type: color
 
-      depthTest: false
-      depthWrite: false
+          glowStrength:
+            value: 1.5
+            editor:
+              range: [0.0, 5.0, 0.01]
 
+          outlineWidth:
+            value: 0.008
+            editor:
+              range: [0.001, 0.05, 0.001]
 
-    rasterizerState:
-
-      cullMode: none
-
-
-    properties:
-
-      tintColor:
-        value: [1,0.8,0.2,1]
-        editor:
-          type: color
-
-
-      tintStrength:
-        value: 0.8
-        editor:
-          range: [0,1,0.01]
+          edgeStrength:
+            value: 2.0
+            editor:
+              range: [0.0, 5.0, 0.01]
 
 }%
 
 
-
-// =========================
-// Vertex
-// =========================
 
 CCProgram vs %{
 
@@ -56,45 +61,52 @@ precision highp float;
 #include <cc-global>
 
 
-in vec3 a_position;
+#if USE_LOCAL
+#include <builtin/uniforms/cc-local>
+#endif
 
+
+in vec3 a_position;
 in vec2 a_texCoord;
+
+
+#if USE_LOCAL
 
 in vec4 a_color;
 
+out vec4 v_color;
+
+#endif
+
 
 out vec2 uv;
-
-out vec4 v_color;
 
 
 
 vec4 vert()
 {
 
-    vec4 pos =
-        vec4(
-            a_position,
-            1.0
-        );
+    vec4 pos = vec4(a_position,1.0);
 
 
-    pos =
-        cc_matViewProj *
-        pos;
+#if USE_LOCAL
+
+    pos = cc_matWorld * pos;
+
+    v_color = a_color;
+
+#endif
 
 
-    uv =
-        a_texCoord;
+    pos = cc_matViewProj * pos;
 
 
-    v_color =
-        a_color;
+    uv = a_texCoord;
 
 
     return pos;
-}
 
+}
 
 }%
 
@@ -102,10 +114,6 @@ vec4 vert()
 
 
 
-
-// =========================
-// Fragment
-// =========================
 
 CCProgram fs %{
 
@@ -115,19 +123,42 @@ precision highp float;
 #include <sprite-texture>
 
 
-
 in vec2 uv;
 
+
+
+#if USE_LOCAL
+
 in vec4 v_color;
+
+#endif
 
 
 
 uniform UBO
 {
 
+    // 16 byte
+    vec4 glowColor;
+
+
+    // 16 byte
     vec4 tintColor;
 
-    float tintStrength;
+
+    // 16 byte
+    vec4 outlineColor;
+
+
+
+    // 16 byte
+    float glowStrength;
+
+    float outlineWidth;
+
+    float edgeStrength;
+
+    float padding;
 
 };
 
@@ -135,17 +166,148 @@ uniform UBO
 
 
 
-// 计算亮度
-float luminance(vec3 color)
+// =====================
+// 安全采样
+// =====================
+
+vec4 sampleSprite(vec2 p)
 {
 
-    return dot(
-        color,
-        vec3(
-            0.299,
-            0.587,
-            0.114
+    return texture(
+        cc_spriteTexture,
+        clamp(
+            p,
+            vec2(0.001),
+            vec2(0.999)
         )
+    );
+
+}
+
+
+
+
+
+float getAlpha(vec2 p)
+{
+
+    return sampleSprite(p).a;
+
+}
+
+
+
+
+
+// =====================
+// 边缘检测
+// =====================
+
+float edgeDetect(vec2 p)
+{
+
+    float c = getAlpha(p);
+
+
+    float l =
+        getAlpha(
+            p + vec2(-outlineWidth,0)
+        );
+
+
+    float r =
+        getAlpha(
+            p + vec2(outlineWidth,0)
+        );
+
+
+    float t =
+        getAlpha(
+            p + vec2(0,outlineWidth)
+        );
+
+
+    float b =
+        getAlpha(
+            p + vec2(0,-outlineWidth)
+        );
+
+
+
+    float edge =
+        abs(c-l)
+        +
+        abs(c-r)
+        +
+        abs(c-t)
+        +
+        abs(c-b);
+
+
+
+    return clamp(
+        edge * edgeStrength,
+        0.0,
+        1.0
+    );
+
+}
+
+
+
+
+
+// =====================
+// 描边
+// =====================
+
+float outlineDetect(vec2 p)
+{
+
+    float a = getAlpha(p);
+
+
+    float n = 0.0;
+
+
+
+    n = max(
+        n,
+        getAlpha(
+            p + vec2(outlineWidth,0)
+        )
+    );
+
+
+    n = max(
+        n,
+        getAlpha(
+            p + vec2(-outlineWidth,0)
+        )
+    );
+
+
+    n = max(
+        n,
+        getAlpha(
+            p + vec2(0,outlineWidth)
+        )
+    );
+
+
+    n = max(
+        n,
+        getAlpha(
+            p + vec2(0,-outlineWidth)
+        )
+    );
+
+
+
+    return clamp(
+        n-a,
+        0.0,
+        1.0
     );
 
 }
@@ -157,65 +319,96 @@ float luminance(vec3 color)
 vec4 frag()
 {
 
-
-    vec4 texColor =
-        texture(
-            cc_spriteTexture,
-            uv
-        );
+    vec4 col =
+        sampleSprite(uv);
 
 
 
-    if(texColor.a < 0.001)
+    if(col.a < 0.01)
     {
         discard;
     }
 
 
 
-    // =========================
-    // 原图亮度
-    // =========================
-
-    float gray =
-        luminance(
-            texColor.rgb
-        );
 
 
+    // =====================
+    // 图片染色
+    // =====================
 
-    // =========================
-    // 泛华颜色
-    // =========================
-
-    vec3 colorized =
-        gray *
-        tintColor.rgb;
+    col.rgb *= tintColor.rgb;
 
 
 
-    // =========================
-    // 混合
-    // =========================
 
-    texColor.rgb =
+
+
+    // =====================
+    // 边缘增强
+    // =====================
+
+    float edge =
+        edgeDetect(uv);
+
+
+
+    col.rgb +=
+        glowColor.rgb
+        *
+        edge
+        *
+        glowStrength;
+
+
+
+
+
+
+    // =====================
+    // 描边
+    // =====================
+
+    float outline =
+        outlineDetect(uv);
+
+
+
+    vec3 outlineRGB =
+        outlineColor.rgb
+        *
+        outline;
+
+
+
+    col.rgb =
         mix(
-            texColor.rgb,
-            colorized,
-            tintStrength
+            outlineRGB,
+            col.rgb,
+            col.a
+        );
+
+
+    col.a =
+        max(
+            col.a,
+            outline * outlineColor.a
         );
 
 
 
-    // =========================
-    // 保留 Sprite Color
-    // =========================
-
-    texColor *= v_color;
 
 
 
-    return texColor;
+#if USE_LOCAL
+
+    col *= v_color;
+
+#endif
+
+
+
+    return col;
 
 }
 

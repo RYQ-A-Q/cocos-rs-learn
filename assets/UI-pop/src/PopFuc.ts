@@ -26,6 +26,9 @@ export class PopFuc extends Component {
     private openEffect() {
         uiMgr.open('popEffect', 'popEffect', UIPanelType.normal, (node) => { }, 'UI-pop3')
     }
+    private openMotionCurve() {
+        uiMgr.open('popMotionCurve', 'popMotionCurve', UIPanelType.normal, (node) => { }, 'UI-pop3')
+    }
 
 
 }
