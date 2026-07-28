@@ -32,6 +32,7 @@ export class PopMotionCurve extends Component {
         let tNode = NodeUtils.getOrCloneInactiveChild(this.nodeContainer)
         tNode.parent = this.nodeContainer
         tNode.setPosition(0, 0, 0)
+        Tween.stopAllByTarget(tNode)
         return tNode
     }
 
@@ -110,6 +111,23 @@ export class PopMotionCurve extends Component {
         this.missileAction(missile, new Vec3(300, -300, 0), 0.5, 450, () => {
             console.log('导弹命中目标！');
         });
+    }
+    /**播放导弹动画2 */
+    private playMissileCircle() {
+        let missile = this.getNewItem();
+        this.flyCircle(
+            missile,
+            new Vec3(-150, -200, 0),  // 圆心
+            100,                 // 半径
+            1,                   // 1圈
+            1,                   // 每圈1秒
+            true,                // 顺时针
+            0,                   // 从右侧开始
+            0,                   // 无延迟
+            () => {
+                this.missileAction(missile, new Vec3(300, -300, 0), 0.5, 450)
+            }
+        );
     }
     private playScattering() {
         // 创建5颗子弹并发射
