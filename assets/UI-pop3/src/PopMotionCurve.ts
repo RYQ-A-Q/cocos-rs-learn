@@ -16,13 +16,6 @@ export class PopMotionCurve extends Component {
     @property(Node)
     private startNode: Node
 
-    @property
-    private jumpHeight: number = 300
-    @property
-    private duration: number = 0.8
-    @property
-    private bezierSteps: number = 30 // 贝塞尔曲线步数
-
     private circleNodes: Node[] = [] // 记录当前转圈的节点
     private nodeAniMap: Map<Node, Tween<Node>> = new Map()
 
@@ -48,7 +41,7 @@ export class PopMotionCurve extends Component {
         const end = new Vec3(200, 0, 0);
 
         // 使用贝塞尔曲线抛物线
-        this.flyParabolaBezier(start, end, this.jumpHeight, this.duration);
+        this.flyParabolaBezier(start, end, 300, 0.8);
     }
     /**播放圆形动画 */
     private playCircle() {
@@ -106,6 +99,17 @@ export class PopMotionCurve extends Component {
     }
     private playCircle2() {
         this.moreCircleAni();
+    }
+    /**播放导弹动画 */
+    private playMissile() {
+        // 创建导弹并发射
+        const missile = this.getNewItem();
+        missile.setPosition(-200, 0, 0);
+
+        // 飞向目标位置 (300, -300)，飞行时间0.5秒，弧线高度450
+        this.missileAction(missile, new Vec3(300, -300, 0), 0.5, 450, () => {
+            console.log('导弹命中目标！');
+        });
     }
     private playScattering() {
         // 创建5颗子弹并发射
@@ -324,8 +328,8 @@ export class PopMotionCurve extends Component {
 
         // 存储轨迹点用于调试（可选）
         const trajectoryPoints: Vec3[] = [];
-        for (let i = 0; i <= this.bezierSteps; i++) {
-            const t = i / this.bezierSteps;
+        for (let i = 0; i <= 30; i++) {
+            const t = i / 30;
             const point = this.cubicBezier(t, p0, p1, p2, p3);
             trajectoryPoints.push(point);
         }
@@ -427,10 +431,10 @@ export class PopMotionCurve extends Component {
                     easing: 'linear',
                     onUpdate: (target: Node, ratio: number) => {
                         elapsed = ratio * duration;
-                        
+
                         // 计算当前速度（持续加速，无上限）
                         const currentSpeed = initialSpeed + acceleration * elapsed;
-                        
+
                         // 计算当前位置（持续加速 + 重力）
                         const vx = dirX * currentSpeed;
                         const vy = dirY * currentSpeed;
@@ -450,6 +454,72 @@ export class PopMotionCurve extends Component {
                 })
                 .start();
         });
+    }
+
+    /**
+     * 导弹飞向目标动画
+     * @param node 导弹节点
+     * @param targetPos 目标位置
+     * @param flightTime 飞行时间（秒）
+     * @param arcHeight 弧线高度（正值向上弯曲，负值向下弯曲）
+     * @param onComplete 完成回调
+     */
+    private missileAction(
+        node: Node,
+        targetPos: Vec3,
+        flightTime: number = 1,
+        arcHeight: number = 100,
+        onComplete?: () => void
+    ) {
+        node.active = true;
+        const startPos = node.position.clone();
+        let uiop = node.getComponent(UIOpacity);
+        uiop.opacity = 0;
+        tween(uiop)
+            .to(0.05, { opacity: 255 })
+            .start();
+        // 计算方向和距离
+        const dx = targetPos.x - startPos.x;
+        const dy = targetPos.y - startPos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // 计算贝塞尔曲线控制点，创建弧线轨迹
+        const midX = (startPos.x + targetPos.x) / 2;
+        const midY = (startPos.y + targetPos.y) / 2;
+        const controlPos = new Vec3(midX, midY + arcHeight, (startPos.z + targetPos.z) / 2);
+
+        // 计算初始角度（朝向目标）
+        const startAngle = Math.atan2(dy, dx) * 180 / Math.PI;
+        node.setRotationFromEuler(0, 0, startAngle - 90);
+
+        tween(node)
+            .to(flightTime, { position: targetPos }, {
+                easing: 'quadIn', // 先慢后快，模拟加速
+                onUpdate: (target: Node, ratio: number) => {
+                    // 使用二次贝塞尔曲线计算当前位置
+                    const u = 1 - ratio;
+                    const x = u * u * startPos.x + 2 * u * ratio * controlPos.x + ratio * ratio * targetPos.x;
+                    const y = u * u * startPos.y + 2 * u * ratio * controlPos.y + ratio * ratio * targetPos.y;
+                    const z = u * u * startPos.z + 2 * u * ratio * controlPos.z + ratio * ratio * targetPos.z;
+
+                    target.setPosition(x, y, z);
+
+                    // 计算下一个位置用于旋转
+                    const nextRatio = Math.min(ratio + 0.02, 1);
+                    const nextU = 1 - nextRatio;
+                    const nextX = nextU * nextU * startPos.x + 2 * nextU * nextRatio * controlPos.x + nextRatio * nextRatio * targetPos.x;
+                    const nextY = nextU * nextU * startPos.y + 2 * nextU * nextRatio * controlPos.y + nextRatio * nextRatio * targetPos.y;
+
+                    // 计算朝向角度
+                    const dirAngle = Math.atan2(nextY - y, nextX - x) * 180 / Math.PI;
+                    target.setRotationFromEuler(0, 0, dirAngle - 90);
+                }
+            })
+            .call(() => {
+                node.active = false;
+                if (onComplete) onComplete();
+            })
+            .start();
     }
 
     /**
