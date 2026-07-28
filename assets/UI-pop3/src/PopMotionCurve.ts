@@ -3,6 +3,7 @@ import { NodeUtils } from '../../RS/core/utils/NodeUtils';
 import { Vec3 } from 'cc';
 import { tween } from 'cc';
 import { UIOpacity } from 'cc';
+import { Tween } from 'cc';
 const { ccclass, property } = _decorator;
 const WIDTH = 700
 const HEIGHT = 850
@@ -20,6 +21,9 @@ export class PopMotionCurve extends Component {
     private duration: number = 0.8
     @property
     private bezierSteps: number = 30 // 贝塞尔曲线步数
+
+    private circleNodes: Node[] = [] // 记录当前转圈的节点
+    private nodeAniMap: Map<Node, Tween<Node>> = new Map()
 
     start() {
 
@@ -90,6 +94,7 @@ export class PopMotionCurve extends Component {
 
         // 5. 延迟1秒后无限旋转
         this.flyCircle(
+            this.getNewItem(),
             new Vec3(0, 0, 0),
             100,
             -1,
@@ -97,6 +102,86 @@ export class PopMotionCurve extends Component {
             true,
             0,
         );
+    }
+    private playCircle2() {
+        this.moreCircleAni();
+    }
+
+    /**
+     * 多节点转圈动画（均匀分布）
+     * 新增节点时会重新计算所有节点的位置，使它们均匀分布
+     */
+    private moreCircleAni() {
+        const item = this.getNewItem();
+        item.active = true;
+
+        // 将新节点加入数组
+        this.circleNodes.push(item);
+
+        // 停止所有节点的旧动画
+        this.circleNodes.forEach(node => {
+            if (this.nodeAniMap.has(node)) {
+                this.nodeAniMap.get(node)?.stop();
+                this.nodeAniMap.delete(node);
+            }
+        });
+
+        // 获取均匀分布的角度（弧度）
+        const angles = this.getAnglesRad(this.circleNodes.length);
+        console.log('转刀数量:', angles.length)
+        // 为每个节点设置新位置并启动动画
+        this.circleNodes.forEach((node, index) => {
+            const centerPos = new Vec3(0, 0, 0);
+            const radius = 150;
+            const startAngle = angles[index];
+
+            // 计算新位置
+            const newX = centerPos.x + radius * Math.cos(startAngle);
+            const newY = centerPos.y + radius * Math.sin(startAngle);
+            const newPos = new Vec3(newX, newY, centerPos.z);
+
+            // 计算目标旋转角度（切线方向）
+            const clockwise = true;
+            const tangentAngle = startAngle + (clockwise ? -Math.PI / 2 : Math.PI / 2);
+            const targetRotation = tangentAngle * 180 / Math.PI;
+
+            // 同时平滑过渡到新位置和方向
+            const tweenPos = tween(node).to(0.3, { position: newPos }, { easing: 'quadOut' });
+            const tweenRot = tween(node).to(0.3, { angle: targetRotation }, { easing: 'quadOut' });
+
+            tweenPos.parallel(tweenRot)
+                .call(() => {
+                    this.flyCircle(
+                        node,
+                        centerPos,
+                        radius,
+                        -1,
+                        1,
+                        clockwise,
+                        startAngle,
+                    );
+                })
+                .start();
+        });
+    }
+
+    /**
+     * 均分角度（返回弧度）
+     * @param count 数量
+     * @returns 角度数组（弧度）
+     */
+    private getAnglesRad(count: number): number[] {
+        if (count <= 0) return [];
+        if (count === 1) return [0];
+
+        const angles: number[] = [];
+        const step = (2 * Math.PI) / count;
+
+        for (let i = 0; i < count; i++) {
+            angles.push(i * step);
+        }
+
+        return angles;
     }
 
     /**
@@ -319,6 +404,7 @@ export class PopMotionCurve extends Component {
     }
     /**
     * 圆形运动轨迹动画（支持单次和循环）
+    * @param target 目标节点
     * @param centerPos 圆心位置
     * @param radius 半径
     * @param rotations 旋转圈数（-1表示无限循环）
@@ -329,6 +415,7 @@ export class PopMotionCurve extends Component {
     * @param onComplete 完成回调（仅非循环时生效）
     */
     private flyCircle(
+        target: Node,
         centerPos: Vec3,
         radius: number,
         rotations: number = 1,
@@ -338,7 +425,7 @@ export class PopMotionCurve extends Component {
         delay: number = 0,
         onComplete?: () => void
     ) {
-        const item = this.getNewItem();
+        const item = target
         item.active = true;
         let uiop = item.getComponent(UIOpacity);
         uiop.opacity = 0;
@@ -359,7 +446,7 @@ export class PopMotionCurve extends Component {
         const doOnce = () => {
             const totalAngle = rotations * 2 * Math.PI * direction;
 
-            tween(item)
+            this.nodeAniMap.set(item, tween(item)
                 .delay(delay)
                 .to(duration * rotations, { position: centerPos }, {
                     easing: 'linear',
@@ -377,13 +464,13 @@ export class PopMotionCurve extends Component {
                     item.active = false;
                     if (onComplete) onComplete();
                 })
-                .start();
+                .start())
         };
 
         // 循环动画
         const doLoop = () => {
             const doOneLoop = () => {
-                tween(item)
+                this.nodeAniMap.set(item, tween(item)
                     .delay(delay)
                     .to(duration, { position: centerPos }, {
                         easing: 'linear',
@@ -403,7 +490,7 @@ export class PopMotionCurve extends Component {
                         completedRotations++;
                         doOneLoop(); // 继续下一圈
                     })
-                    .start();
+                    .start())
             };
 
             doOneLoop();
