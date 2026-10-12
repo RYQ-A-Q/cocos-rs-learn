@@ -945,7 +945,7 @@
     "node": {
       "__id__": 31
     },
-    "_enabled": true,
+    "_enabled": false,
     "__prefab": {
       "__id__": 35
     },
@@ -967,7 +967,7 @@
     "node": {
       "__id__": 31
     },
-    "_enabled": true,
+    "_enabled": false,
     "__prefab": {
       "__id__": 37
     },
@@ -2788,6 +2788,8 @@
       "__id__": 0
     },
     "fileId": "592t0i1L5EgrJzYEabCrEH",
+    "instance": null,
+    "targetOverrides": null,
     "nestedPrefabInstanceRoots": null
   },
   {

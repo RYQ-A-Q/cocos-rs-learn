@@ -1,0 +1,35 @@
+<div class="app">
+  <header>
+    <div class="eyebrow">UNITY 6 → COCOS CREATOR</div>
+    <h1>粒子特效转换</h1>
+    <p>选择 Unity 的 .unitypackage，预览转换结果，再决定是否导入当前项目。</p>
+  </header>
+  <section class="card input-card">
+    <label for="package">Unity 资源包</label>
+    <input id="package" type="file" accept=".unitypackage">
+    <label for="assetsPath">Unity 项目 Assets 路径（可选，用于补齐包外依赖）</label>
+    <input id="assetsPath" type="text" placeholder="例如 C:\\MyUnityProject\\Assets">
+    <button id="convert" type="button">转换资源包</button>
+    <p id="status" class="status">选择文件后开始转换。</p>
+  </section>
+  <div id="result" class="result" hidden>
+    <section class="stats">
+      <div><strong id="prefabs">0</strong><span>预制体</span></div>
+      <div><strong id="particles">0</strong><span>粒子系统</span></div>
+      <div><strong id="materials">0</strong><span>材质</span></div>
+      <div><strong id="textures">0</strong><span>贴图</span></div>
+    </section>
+    <section class="card preview-card">
+      <div class="heading"><h2>Cocos 转换预览</h2><span>2D 示意 · 非引擎实机</span></div>
+      <canvas id="canvas"></canvas>
+      <div class="controls"><select id="particleSelect"></select><button id="replay" type="button" class="secondary">重新播放</button></div>
+    </section>
+    <section class="card">
+      <div class="heading"><h2>转换报告</h2></div>
+      <div id="warnings" class="warnings"></div>
+      <p class="note">预览反映粒子参数和贴图的大致形态。实际视觉效果请在 Cocos 场景中播放预制体确认。</p>
+      <button id="import" type="button" disabled>导入当前项目的 Effect 文件夹</button>
+      <p id="importStatus" class="status"></p>
+    </section>
+  </div>
+</div>

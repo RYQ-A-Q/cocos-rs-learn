@@ -1,0 +1,39 @@
+{
+  "package_version": 2,
+  "name": "unity-cocos-effect",
+  "version": "0.2.5",
+  "description": "Convert Unity 6 particle packages into Cocos Creator 3.8.7 prefabs",
+  "main": "./main.js",
+  "dependencies": {
+    "tar-stream": "^3.2.1",
+    "yaml": "^2.9.1",
+    "yazl": "^3.3.1"
+  },
+  "panels": {
+    "default": {
+      "title": "Unity → Cocos 粒子转换",
+      "type": "dockable",
+      "main": "./panels/default",
+      "size": {
+        "min-width": 420,
+        "min-height": 560,
+        "width": 720,
+        "height": 780
+      }
+    }
+  },
+  "contributions": {
+    "menu": [
+      {
+        "path": "i18n:menu.extension",
+        "label": "Unity → Cocos 粒子转换",
+        "message": "open-panel"
+      }
+    ],
+    "messages": {
+      "open-panel": { "methods": ["openPanel"] },
+      "convert-package": { "methods": ["convertPackage"] },
+      "import-latest": { "methods": ["importLatest"] }
+    }
+  }
+}
