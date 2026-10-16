@@ -1510,7 +1510,7 @@
     "_enabled": true,
     "__prefab": null,
     "_customMaterial": {
-      "__uuid__": "da6f9848-3e63-4300-85ae-77d8e294eba4",
+      "__uuid__": "c1207204-5403-4c07-88a4-577553ecd489",
       "__expectedType__": "cc.Material"
     },
     "_srcBlendFactor": 2,
@@ -1622,7 +1622,7 @@
     "_enabled": true,
     "__prefab": null,
     "_customMaterial": {
-      "__uuid__": "da6f9848-3e63-4300-85ae-77d8e294eba4",
+      "__uuid__": "c1207204-5403-4c07-88a4-577553ecd489",
       "__expectedType__": "cc.Material"
     },
     "_srcBlendFactor": 2,
@@ -1734,7 +1734,7 @@
     "_enabled": true,
     "__prefab": null,
     "_customMaterial": {
-      "__uuid__": "da6f9848-3e63-4300-85ae-77d8e294eba4",
+      "__uuid__": "c1207204-5403-4c07-88a4-577553ecd489",
       "__expectedType__": "cc.Material"
     },
     "_srcBlendFactor": 2,
@@ -1846,7 +1846,7 @@
     "_enabled": true,
     "__prefab": null,
     "_customMaterial": {
-      "__uuid__": "da6f9848-3e63-4300-85ae-77d8e294eba4",
+      "__uuid__": "c1207204-5403-4c07-88a4-577553ecd489",
       "__expectedType__": "cc.Material"
     },
     "_srcBlendFactor": 2,
@@ -1958,7 +1958,7 @@
     "_enabled": true,
     "__prefab": null,
     "_customMaterial": {
-      "__uuid__": "da6f9848-3e63-4300-85ae-77d8e294eba4",
+      "__uuid__": "c1207204-5403-4c07-88a4-577553ecd489",
       "__expectedType__": "cc.Material"
     },
     "_srcBlendFactor": 2,

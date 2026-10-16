@@ -1,0 +1,162 @@
+
+CCEffect %{
+  techniques:
+  - name: shatter
+    passes:
+    - vert: shatter-vs:vert
+      frag: shatter-fs:frag
+      depthStencilState:
+        depthTest: false
+        depthWrite: false
+      rasterizerState:
+        cullMode: none
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendSrcAlpha: one
+          blendDstAlpha: one_minus_src_alpha
+      properties:
+        progress: { value: 0.0, editor: { displayName: "破碎进度", min: 0.0, max: 1.0, step: 0.01 } }
+        fragmentCount: { value: 12.0, editor: { displayName: "碎片数量", min: 4.0, max: 30.0, step: 1.0 } }
+        flyDistance: { value: 0.25, editor: { displayName: "飞散距离", min: 0.0, max: 0.6, step: 0.01 } }
+        fragmentSize: { value: 1.0, editor: { displayName: "碎片大小", min: 0.5, max: 1.5, step: 0.05 } }
+        rotationSpeed: { value: 1.0, editor: { displayName: "旋转强度", min: 0.0, max: 5.0, step: 0.1 } }
+        gapWidth: { value: 0.006, editor: { displayName: "裂缝宽度", min: 0.0, max: 0.03, step: 0.001 } }
+        fadeSpeed: { value: 0.7, editor: { displayName: "消失速度", min: 0.1, max: 1.0, step: 0.05 } }
+}%
+
+CCProgram shatter-vs %{
+precision highp float;
+#include <builtin/uniforms/cc-global>
+#include <builtin/uniforms/cc-local>
+
+in vec3 a_position;
+in vec2 a_texCoord;
+in vec4 a_color;
+
+out vec2 v_uv;
+out vec4 v_color;
+
+vec4 vert () {
+    vec4 pos = vec4(a_position, 1.0);
+    #if USE_LOCAL
+    pos = cc_matWorld * pos;
+    #endif
+    pos = cc_matViewProj * pos;
+    v_uv = a_texCoord;
+    v_color = a_color;
+    return pos;
+}
+}%
+
+CCProgram shatter-fs %{
+precision highp float;
+#include <builtin/uniforms/cc-global>
+#include <builtin/internal/sprite-texture>
+
+in vec2 v_uv;
+in vec4 v_color;
+
+uniform ShatterParams {
+    float progress;
+    float fragmentCount;
+    float flyDistance;
+    float fragmentSize;
+    float rotationSpeed;
+    float gapWidth;
+    float fadeSpeed;
+};
+
+float hash21(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+vec2 hash22(vec2 p) {
+    float n = hash21(p);
+    return vec2(n, hash21(p + n + 17.17));
+}
+
+vec2 cellCenter(vec2 id, float count) {
+    vec2 jitter = (hash22(id) - 0.5) * 0.7;
+    return (id + 0.5 + jitter) / count;
+}
+
+void findCell(vec2 uv, float count, out vec2 bestId, out vec2 bestCenter, out float nearest, out float secondNearest) {
+    vec2 grid = uv * count;
+    vec2 baseId = floor(grid);
+    nearest = 1000.0;
+    secondNearest = 1000.0;
+    bestId = baseId;
+    bestCenter = (baseId + 0.5) / count;
+
+    for (int y = -1; y <= 1; y++) {
+        for (int x = -1; x <= 1; x++) {
+            vec2 id = baseId + vec2(float(x), float(y));
+            vec2 center = cellCenter(id, count);
+            float d = distance(uv, center);
+
+            if (d < nearest) {
+                secondNearest = nearest;
+                nearest = d;
+                bestId = id;
+                bestCenter = center;
+            } else if (d < secondNearest) {
+                secondNearest = d;
+            }
+        }
+    }
+}
+
+vec4 frag () {
+    float p = clamp(progress, 0.0, 1.0);
+    float count = clamp(fragmentCount, 4.0, 30.0);
+
+    vec2 cellId;
+    vec2 center;
+    float nearest;
+    float secondNearest;
+    findCell(v_uv, count, cellId, center, nearest, secondNearest);
+
+    // 每个碎片从画面中心向四周飞散，使用随机角度扰动。
+    vec2 radial = center - vec2(0.5);
+    vec2 direction = normalize(radial + (hash22(cellId) - 0.5) * 0.12 + vec2(0.0001));
+    float randomValue = hash21(cellId + 9.7);
+    float distanceScale = mix(0.65, 1.35, randomValue);
+    vec2 displacement = direction * flyDistance * distanceScale * p * p;
+
+    // 根据碎片中心产生旋转感。
+    float angle = (randomValue * 2.0 - 1.0) * rotationSpeed * p;
+    float c = cos(angle);
+    float s = sin(angle);
+    mat2 rot = mat2(c, -s, s, c);
+
+    // 反向变换 UV，模拟碎片飞散与旋转。
+    vec2 localUv = v_uv - center - displacement;
+    localUv = rot * localUv / max(fragmentSize, 0.01);
+    vec2 sampleUv = center + localUv;
+
+    // 超出原图区域的碎片部分不采样，避免边缘重复。
+    if (sampleUv.x < 0.0 || sampleUv.x > 1.0 || sampleUv.y < 0.0 || sampleUv.y > 1.0) {
+        discard;
+    }
+
+    vec4 color = texture(cc_spriteTexture, sampleUv) * v_color;
+
+    // 使用 Voronoi 相邻中心距离差生成多边形裂缝。
+    float edgeDistance = secondNearest - nearest;
+    float gap = gapWidth * p;
+    float edgeMask = smoothstep(gap, gap + 0.002, edgeDistance);
+
+    // 各碎片随机淡出，避免所有碎片同时消失。
+    float fadeStart = clamp(1.0 - fadeSpeed, 0.0, 0.95);
+    float cellFadeStart = clamp(fadeStart + randomValue * 0.2, 0.0, 0.98);
+    float fade = 1.0 - smoothstep(cellFadeStart, 1.0, p);
+
+    color.a *= edgeMask * fade;
+    return color;
+}
+}%
