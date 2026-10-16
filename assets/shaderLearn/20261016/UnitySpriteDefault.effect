@@ -3,8 +3,8 @@ CCEffect %{
 techniques:
   - name: unity-sprite-default
     passes:
-      - vert: vs:vert
-        frag: fs:frag
+      - vert: sprite-vs:vert
+        frag: sprite-fs:frag
         depthStencilState:
           depthTest: false
           depthWrite: false
@@ -20,20 +20,17 @@ techniques:
 
 }%
 
-CCProgram vs %{
+CCProgram sprite-vs %{
 precision highp float;
-#include <cc-global>
+#include <builtin/uniforms/cc-global>
 #include <builtin/uniforms/cc-local>
 
 in vec3 a_position;
 in vec2 a_texCoord;
+in vec4 a_color;
 
-#if USE_LOCAL
-  in vec4 a_color;
-  out vec4 v_color;
-#endif
-
-out vec2 v_uv;
+out vec2 uv0;
+out vec4 color;
 
 vec4 vert() {
   vec4 pos = vec4(a_position, 1.0);
@@ -41,34 +38,24 @@ vec4 vert() {
     pos = cc_matWorld * pos;
   #endif
   pos = cc_matViewProj * pos;
-  v_uv = a_texCoord;
-  #if USE_LOCAL
-    v_color = a_color;
-  #endif
+  uv0 = a_texCoord;
+  color = a_color;
   return pos;
 }
 }%
 
-CCProgram fs %{
+CCProgram sprite-fs %{
 precision highp float;
-#include <sprite-texture>
+#include <builtin/internal/sprite-texture>
 
-in vec2 v_uv;
-
-#if USE_LOCAL
-  in vec4 v_color;
-#endif
+in vec2 uv0;
+in vec4 color;
 
 vec4 frag() {
-  vec4 color = texture(cc_spriteTexture, v_uv);
-  
-  #if USE_LOCAL
-    color *= v_color;
-  #endif
-  
-  // Unity Sprites/Default：预乘 Alpha 
-  color.rgb *= color.a;
-  
-  return color;
+  vec4 o = texture(cc_spriteTexture, uv0);
+  o *= color;
+  // 对齐 Unity Sprites/Default 的预乘 Alpha 处理  
+  o.rgb *= o.a;
+  return o;
 }
 }%
