@@ -1,0 +1,125 @@
+
+CCEffect %{
+techniques:
+  - name: scan-line
+    passes:
+      - vert: scan-vs:vert
+        frag: scan-fs:frag
+        depthStencilState:
+          depthTest: false
+          depthWrite: false
+        rasterizerState:
+          cullMode: none
+        blendState:
+          targets:
+            - blend: true
+              blendSrc: src_alpha
+              blendDst: one_minus_src_alpha
+              blendSrcAlpha: one
+              blendDstAlpha: one_minus_src_alpha
+        properties:
+          scanColor:
+            {
+              value: [0.2, 0.8, 1.0, 1.0],
+              editor: { displayName: "扫描颜色", type: color },
+            }
+          scanDirection:
+            { value: -30.0, editor: { displayName: "扫描方向（度）" } }
+          scanOffset: { value: 0.0, editor: { displayName: "扫描位置偏移" } }
+          scanSpeed: { value: 0.5, editor: { displayName: "扫描速度" } }
+          scanWidth: { value: 0.08, editor: { displayName: "扫描宽度" } }
+          scanSoftness: { value: 0.025, editor: { displayName: "边缘柔和度" } }
+          scanBrightness: { value: 1.5, editor: { displayName: "扫描亮度" } }
+          scanAlpha: { value: 1.0, editor: { displayName: "扫描透明度" } }
+          scanStyle:
+            {
+              value: 0.0,
+              editor:
+                {
+                  displayName: "扫描样式",
+                  tooltip: "0=中间亮两侧渐隐，1=均匀亮带，2=中间亮边缘更柔和",
+                },
+            }
+
+}%
+
+CCProgram scan-vs %{
+precision highp float;
+#include <builtin/uniforms/cc-global>
+#include <builtin/uniforms/cc-local>
+
+in vec3 a_position;
+in vec2 a_texCoord;
+in vec4 a_color;
+
+out vec2 v_uv;
+out vec4 v_color;
+
+vec4 vert() {
+  vec4 pos = vec4(a_position, 1.0);
+  #if USE_LOCAL
+    pos = cc_matWorld * pos;
+  #endif
+  pos = cc_matViewProj * pos;
+  v_uv = a_texCoord;
+  v_color = a_color;
+  return pos;
+}
+}%
+
+CCProgram scan-fs %{
+precision highp float;
+#include <builtin/uniforms/cc-global>
+#include <builtin/internal/sprite-texture>
+
+in vec2 v_uv;
+in vec4 v_color;
+
+uniform ScanParams {
+  vec4 scanColor;
+  float scanDirection;
+  float scanOffset;
+  float scanSpeed;
+  float scanWidth;
+  float scanSoftness;
+  float scanBrightness;
+  float scanAlpha;
+  float scanStyle;
+};
+
+vec4 frag() {
+  vec4 texColor = texture(cc_spriteTexture, v_uv) * v_color;
+  
+  float angle = radians(scanDirection);
+  vec2 normal = vec2(cos(angle), sin(angle));
+  float projected = dot(v_uv - vec2(0.5), normal);
+  float travel = (fract(cc_time.x * max(scanSpeed, 0.0)) - 0.5) * 1.5;
+  float distanceToScan = abs(projected - travel - scanOffset);
+  
+  float width = max(scanWidth, 0.001);
+  float softness = max(scanSoftness, 0.001);
+  float edge = 1.0 - smoothstep(width * 0.5, width * 0.5 + softness, distanceToScan);
+  
+  float normalizedDistance = clamp(distanceToScan / (width * 0.5), 0.0, 1.0);
+  float centerFade = 1.0 - smoothstep(0.0, 1.0, normalizedDistance);
+  float softCenter = 1.0 - smoothstep(0.0, 1.0 + softness / width, distanceToScan / (width * 0.5));
+  
+  float style = clamp(scanStyle, 0.0, 2.0);
+  float styleMask = edge;
+  if (style < 0.5) {
+    styleMask = edge * centerFade;
+  } else if (style > 1.5) {
+    styleMask = edge * softCenter;
+  }
+  
+  float scan = clamp(styleMask, 0.0, 1.0);
+  float alpha = scan * scanColor.a * clamp(scanAlpha, 0.0, 1.0) * texColor.a;
+  
+  texColor.rgb = mix(texColor.rgb, scanColor.rgb, clamp(scan * scanBrightness * scanColor.a * scanAlpha, 0.0, 1.0));
+  texColor.a = texColor.a;
+  texColor.rgb *= 1.0;
+  texColor.a = min(1.0, texColor.a + alpha * (1.0 - texColor.a));
+  
+  return texColor;
+}
+}%
