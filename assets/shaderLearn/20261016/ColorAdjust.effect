@@ -1,0 +1,179 @@
+
+CCEffect %{
+techniques:
+  - name: color-adjust
+    passes:
+      - vert: vs:vert
+        frag: fs:frag
+        depthStencilState:
+          depthTest: false
+          depthWrite: false
+        rasterizerState:
+          cullMode: none
+        blendState:
+          targets:
+            - blend: true
+              blendSrc: src_alpha
+              blendDst: one_minus_src_alpha
+              blendSrcAlpha: one
+              blendDstAlpha: one_minus_src_alpha
+        properties:
+          brightness:
+            {
+              value: 50.0,
+              editor: { displayName: 亮度, range: [-100.0, 100.0] },
+            }
+          saturation:
+            {
+              value: 50.0,
+              editor: { displayName: 饱和度, range: [-100.0, 100.0] },
+            }
+          contrast:
+            {
+              value: 50.0,
+              editor: { displayName: 对比度, range: [-100.0, 100.0] },
+            }
+          softness:
+            {
+              value: 1.0,
+              editor: { displayName: 柔和度, range: [-100.0, 100.0] },
+            }
+          hue:
+            {
+              value: 50.0,
+              editor: { displayName: 色相偏移, range: [-100.0, 100.0] },
+            }
+          effectStrength:
+            {
+              value: 100.0,
+              editor: { displayName: 效果强度, range: [-100.0, 100.0] },
+            }
+
+}%
+
+CCProgram vs %{
+precision highp float;
+#include <cc-global>
+#include <builtin/uniforms/cc-local>
+
+in vec3 a_position;
+in vec2 a_texCoord;
+#if USE_LOCAL
+  in vec4 a_color;
+  out vec4 v_color;
+#endif
+out vec2 v_uv;
+
+vec4 vert() {
+  vec4 pos = vec4(a_position, 1.0);
+  pos = cc_matWorld * pos;
+  pos = cc_matViewProj * pos;
+  v_uv = a_texCoord;
+  #if USE_LOCAL
+    v_color = a_color;
+  #endif
+  return pos;
+}
+}%
+
+CCProgram fs %{
+precision highp float;
+#include <sprite-texture>
+
+in vec2 v_uv;
+#if USE_LOCAL
+  in vec4 v_color;
+#endif
+
+uniform ColorAdjustParams {
+  float brightness;
+  float saturation;
+  float contrast;
+  float softness;
+  float hue;
+  float effectStrength;
+  vec2 padding;
+};
+
+float getAdjustValue(float v) {
+  return clamp(v, - 100.0, 100.0) / 100.0;
+}
+
+float getLuma(vec3 c) {
+  return dot(c, vec3(0.299, 0.587, 0.114));
+}
+
+vec3 rgbToHsv(vec3 c) {
+  vec4 K = vec4(0.0, - 1.0 / 3.0, 2.0 / 3.0, - 1.0);
+  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+  float d = q.x - min(q.w, q.y);
+  float e = 0.0000000001;
+  return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+vec3 hsvToRgb(vec3 c) {
+  vec3 p = abs(fract(c.xxx + vec3(0.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0);
+  return c.z * mix(vec3(1.0), clamp(p - 1.0, 0.0, 1.0), c.y);
+}
+
+vec3 adjustColor(vec3 rgb) {
+  float b = getAdjustValue(brightness);
+  float s = getAdjustValue(saturation);
+  float c = getAdjustValue(contrast);
+  float h = getAdjustValue(hue);
+  
+  // 亮度：-100 最暗，0 原始，100 最亮 
+  rgb += vec3(b * 0.5);
+  
+  // 饱和度：-100 灰度，0 原始，100 增强饱和度 
+  float gray = dot(rgb, vec3(0.299, 0.587, 0.114));
+  rgb = mix(vec3(gray), rgb, 1.0 + s);
+  
+  // 对比度：-100 降低对比度，0 原始，100 增强对比度 
+  float contrastFactor = 1.0 + c;
+  rgb = (rgb - 0.5) * contrastFactor + 0.5;
+  
+  // 色相：0 原始，正负数向不同方向偏移 
+  vec3 hsv = rgbToHsv(clamp(rgb, 0.0, 1.0));
+  hsv.x = fract(hsv.x + h * 0.5);
+  rgb = hsvToRgb(hsv);
+  
+  return clamp(rgb, 0.0, 1.0);
+}
+
+vec4 frag() {
+  vec4 col = texture(cc_spriteTexture, v_uv);
+  vec3 original = col.rgb;
+  
+  // 四方向邻域采样，柔化贴图细节  
+  vec2 texel = vec2(1.0 / 512.0);
+  vec3 around = texture(cc_spriteTexture, v_uv + vec2(texel.x, 0.0)).rgb;
+  around += texture(cc_spriteTexture, v_uv - vec2(texel.x, 0.0)).rgb;
+  around += texture(cc_spriteTexture, v_uv + vec2(0.0, texel.y)).rgb;
+  around += texture(cc_spriteTexture, v_uv - vec2(0.0, texel.y)).rgb;
+  around *= 0.25;
+  // 柔和度：负数锐化，0 原始，正数柔化 
+  float soft = getAdjustValue(softness);
+  vec3 center = original;
+  
+  if (soft >= 0.0) {
+    center = mix(original, around, soft);
+  } else {
+    center = clamp(original + (original - around) * (-soft), 0.0, 1.0);
+  }
+  
+  vec3 adjusted = adjustColor(center);
+  
+  // 效果强度：0 使用原图，100 使用完整调整效果 
+  float strength = clamp(effectStrength, 0.0, 100.0) / 100.0;
+  col.rgb = mix(original, adjusted, strength);
+  
+  #if USE_LOCAL
+    col.rgb *= v_color.rgb;
+    col.a *= v_color.a;
+  #endif
+  
+  return col;
+}
+}%

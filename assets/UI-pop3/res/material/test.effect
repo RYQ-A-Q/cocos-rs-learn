@@ -133,7 +133,6 @@ vec4 frag(){
             pulseSpeed
         ) *
         pulseStrength;
-
     vec3 finalColor =
         texColor.rgb *
         particleColor.rgb *
